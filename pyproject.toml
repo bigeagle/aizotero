@@ -68,3 +68,10 @@ asyncio_mode = "auto"
 [tool.pyright]
 venv = ".venv"
 venvPath = "."
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "pre-commit>=4.2.0",
+    "ruff>=0.12.7",
+]

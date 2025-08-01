@@ -18,7 +18,7 @@ interface Paper {
 }
 
 const paper = ref<Paper | null>(null)
-const chatWidth = ref(400) // 默认400px
+const chatWidth = ref(600) // 默认400px
 const isResizing = ref(false)
 const showAIConfig = ref(false)
 const pdfUrl = computed(() => {

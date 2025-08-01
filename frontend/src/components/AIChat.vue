@@ -13,8 +13,26 @@
             : 'bg-white inline-block'"
           class="px-4 py-2 rounded-lg max-w-xs sm:max-w-md lg:max-w-lg"
         >
-          <div class="whitespace-pre-wrap">{{ message.content }}</div>
-          <div class="text-xs opacity-70 mt-1">{{ formatTime(message.timestamp) }}</div>
+          <div
+            v-if="message.role === 'assistant'"
+            class="text-sm max-w-none
+              [&>p]:mb-2 [&>p:last-child]:mb-0
+              [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-2
+              [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-2
+              [&>h1]:text-lg [&>h1]:font-bold [&>h1]:mb-2
+              [&>h2]:text-base [&>h2]:font-bold [&>h2]:mb-2
+              [&>h3]:text-sm [&>h3]:font-bold [&>h3]:mb-1
+              [&>blockquote]:border-l-4 [&>blockquote]:border-gray-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:mb-2
+              [&>code]:bg-gray-100 [&>code]:px-1 [&>code]:py-0.5 [&>code]:rounded [&>code]:text-sm
+              [&>pre]:bg-gray-50 [&>pre]:p-2 [&>pre]:rounded [&>pre]:overflow-x-auto [&>pre]:mb-2
+              [&>a]:text-blue-600 [&>a]:hover:text-blue-800 [&>a]:underline"
+            v-html="renderMarkdown(message.content)"
+          ></div>
+          <div
+            v-else
+            class="whitespace-pre-wrap"
+          >{{ message.content }}</div>
+          <div class="text-xs opacity-70 mt-2">{{ formatTime(message.timestamp) }}</div>
         </div>
       </div>
 
@@ -94,9 +112,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, watch } from 'vue';
+import { ref, computed, nextTick, watch, onMounted } from 'vue';
 import { useAIStore } from '@/stores/aiStore';
 import { AIService } from '@/services/aiService';
+import { marked } from 'marked';
+import markedKatex from 'marked-katex-extension';
 
 interface Props {
   paperId: string;
@@ -117,7 +137,7 @@ const isConfigured = computed(() => aiStore.isConfigured);
 const tokenUsage = computed(() => aiStore.tokenUsage);
 
 const quickPrompts = [
-  { key: 'summary', label: '总结论文', prompt: '请用中文简要总结这篇论文的主要内容和贡献' },
+  { key: 'summary', label: '总结论文', prompt: '深入解读这篇论文，不要使用表格。' },
   { key: 'methods', label: '研究方法', prompt: '这篇论文的研究方法是什么？有什么创新点？' },
   { key: 'contribution', label: '主要贡献', prompt: '这篇论文的主要贡献有哪些？对相关领域有什么影响？' },
   { key: 'limitations', label: '局限性', prompt: '这篇论文有哪些局限性？作者提到了哪些未来工作？' },
@@ -255,6 +275,19 @@ function formatTime(timestamp: Date) {
     hour: '2-digit',
     minute: '2-digit'
   });
+}
+
+// 配置 marked 支持 KaTeX
+function renderMarkdown(content: string): string {
+  if (!content.trim()) return '';
+
+  // 使用 marked-katex-extension
+  const markedWithKatex = marked.use(markedKatex({
+    throwOnError: false,
+    displayMode: false
+  }));
+
+  return markedWithKatex.parse(content) as string;
 }
 
 // 自动滚动到底部

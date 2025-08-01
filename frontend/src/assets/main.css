@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 
 @layer base {
   * {
@@ -6,7 +7,7 @@
     padding: 0;
     box-sizing: border-box;
   }
-  
+
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     background-color: #f9fafb;
@@ -14,7 +15,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   #app {
     min-height: 100vh;
   }
@@ -32,17 +33,17 @@
     font-weight: 500;
     transition: all 0.2s;
   }
-  
+
   .btn-primary {
     background-color: #2563eb;
     color: white;
   }
-  
+
   .btn-secondary {
     background-color: #e5e7eb;
     color: #1f2937;
   }
-  
+
   .card {
     background-color: white;
     border-radius: 0.5rem;

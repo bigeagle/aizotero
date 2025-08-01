@@ -42,9 +42,7 @@ export class AIService {
     this.conversationHistory = [
       {
         role: "system",
-        content: `你是学术论文阅读助手。正在阅读论文：${
-          paperContext.title
-        }，作者：${paperContext.authors.join(", ")}`,
+        content: `你是学术论文阅读助手。默认用 markdown 格式回答问题，但不要使用表格，数学公式使用 $LaTeX$ 格式。`,
         timestamp: new Date(),
       },
     ];

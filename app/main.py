@@ -7,7 +7,7 @@ from app.api.v1.papers import router as papers_router
 app = FastAPI(
     title="AIZotero",
     description="AI-powered paper reading assistant for Zotero",
-    version="0.1.0"
+    version="0.1.0",
 )
 
 # Configure CORS
@@ -30,4 +30,5 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

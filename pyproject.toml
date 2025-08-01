@@ -17,6 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "fastapi>=0.116.1",
+    "markitdown[pdf]>=0.1.2",
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.1.1",
     "pyzotero>=1.6.11",

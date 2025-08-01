@@ -5,6 +5,7 @@ from datetime import datetime
 
 class PaperResponse(BaseModel):
     """简化响应模型，用于前端展示"""
+
     id: str
     title: str
     authors: List[str]
@@ -12,13 +13,12 @@ class PaperResponse(BaseModel):
     journal: Optional[str] = None
     abstract: Optional[str] = None
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 class PaperRecord(BaseModel):
     """完整论文记录，包含所有元数据"""
+
     id: str
     title: str
     authors: List[str]
@@ -40,7 +40,5 @@ class PaperRecord(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        "json_encoders": {
-            datetime: lambda v: v.isoformat()
-        }
+        "json_encoders": {datetime: lambda v: v.isoformat()},
     }

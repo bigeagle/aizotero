@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -12,45 +12,69 @@ interface Paper {
   year?: number
   journal?: string
   abstract?: string
+  pdf_path?: string
 }
 
 const paper = ref<Paper | null>(null)
 const chatWidth = ref(400) // 默认400px
 const isResizing = ref(false)
-
-onMounted(() => {
-  // 这里将来会从API获取真实数据
-  paper.value = {
-    id: paperId,
-    title: '示例论文：深度学习的未来',
-    authors: ['张三', '李四'],
-    year: 2024,
-    journal: 'Nature AI',
-    abstract: '这是一个示例论文摘要...'
-  }
+const pdfUrl = computed(() => {
+  if (!paper.value?.pdf_path) return null
+  return `/api/v1/papers/${paperId}/pdf`
 })
+
+async function fetchPaper() {
+  try {
+    const response = await fetch(`/api/v1/papers/${paperId}/record`)
+    if (response.ok) {
+      paper.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Failed to fetch paper:', error)
+    // Fallback to basic paper info
+    paper.value = {
+      id: paperId,
+      title: '论文加载中...',
+      authors: [],
+    }
+  }
+}
 
 function startResize(e: MouseEvent) {
   isResizing.value = true
   document.addEventListener('mousemove', handleResize)
-  document.addEventListener('mouseup', stopResize)
+  document.addEventListener('mouseup', stopResize, { capture: true })
+  document.addEventListener('mouseleave', stopResize)
+  e.preventDefault()
 }
 
 function handleResize(e: MouseEvent) {
   if (!isResizing.value) return
+  const eps = 15
   const newWidth = window.innerWidth - e.clientX
   chatWidth.value = Math.max(300, Math.min(600, newWidth))
+
+  if (newWidth < (300-eps) || newWidth > (600+eps)) {
+    stopResize()
+  }
 }
 
 function stopResize() {
+  if (!isResizing.value) return
   isResizing.value = false
   document.removeEventListener('mousemove', handleResize)
-  document.removeEventListener('mouseup', stopResize)
+  document.removeEventListener('mouseup', stopResize, { capture: true })
+  document.removeEventListener('mouseleave', stopResize)
 }
+
+onMounted(() => {
+  fetchPaper()
+})
 
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleResize)
-  document.removeEventListener('mouseup', stopResize)
+  document.removeEventListener('mouseup', stopResize, { capture: true })
+  document.removeEventListener('mouseleave', stopResize)
 })
 </script>
 
@@ -61,24 +85,31 @@ onUnmounted(() => {
       <div class="flex-1 bg-white p-4 overflow-hidden">
         <div class="h-full flex flex-col">
           <h2 class="text-xl font-semibold mb-4 px-2">{{ paper.title }}</h2>
-          <div class="flex-1 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500">
-            <p class="text-lg mb-2">PDF阅读器区域</p>
+          <div class="flex-1 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500" v-if="!pdfUrl">
+            <p class="text-lg mb-2">PDF文件不可用</p>
             <p class="text-sm">论文ID: {{ paper.id }}</p>
           </div>
+          <iframe
+            v-if="pdfUrl"
+            :src="pdfUrl"
+            class="w-full h-full border-none rounded-lg"
+            type="application/pdf"
+          >
+          </iframe>
         </div>
       </div>
-      
+
       <!-- 分割线 -->
-      <div 
-        class="w-1 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex items-center justify-center"
+      <div
+        class="w-2 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex items-center justify-center"
         @mousedown="startResize"
         :class="{ 'bg-blue-500': isResizing }"
       >
         <div class="w-1 h-8 bg-gray-400 rounded"></div>
       </div>
-      
+
       <!-- 右侧：AI对话 -->
-      <div 
+      <div
         class="bg-white p-4 overflow-hidden flex flex-col"
         :style="{ width: chatWidth + 'px' }"
       >
@@ -90,9 +121,9 @@ onUnmounted(() => {
             </div>
           </div>
           <div class="flex gap-2">
-            <input 
-              type="text" 
-              placeholder="输入你的问题..." 
+            <input
+              type="text"
+              placeholder="输入你的问题..."
               class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">发送</button>

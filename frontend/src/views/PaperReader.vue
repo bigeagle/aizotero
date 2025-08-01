@@ -82,8 +82,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-screen w-full flex flex-col absolute inset-0">
-    <div v-if="paper" class="flex-1 flex w-full">
+  <div class="h-screen w-full flex flex-col absolute inset-0 overflow-hidden">
+    <div v-if="paper" class="flex-1 flex w-full h-full">
       <!-- 左侧：PDF阅读器 -->
       <div class="flex-1 bg-white p-4 overflow-hidden">
         <div class="h-full flex flex-col">
@@ -113,7 +113,7 @@ onUnmounted(() => {
 
       <!-- 右侧：AI配置和对话 -->
       <div
-        class="bg-white overflow-hidden flex flex-col"
+        class="bg-white overflow-hidden flex flex-col h-full"
         :style="{ width: chatWidth + 'px' }"
       >
         <!-- AI配置 -->
@@ -131,7 +131,7 @@ onUnmounted(() => {
         </div>
 
         <!-- AI对话 -->
-        <div class="flex-1">
+        <div class="flex-1 overflow-hidden">
           <AIChat :paper-id="paperId" />
         </div>
       </div>

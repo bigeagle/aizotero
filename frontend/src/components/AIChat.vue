@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col h-full bg-gray-50">
+  <div class="flex flex-col h-full bg-gray-50 max-h-full">
     <!-- 对话历史 -->
-    <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth min-h-0">
       <div
         v-for="(message, index) in conversation"
         :key="index"
@@ -32,7 +32,7 @@
     </div>
 
     <!-- 快速提示 -->
-    <div class="p-3 bg-white border-t border-gray-200">
+    <div class="p-3 bg-white border-t border-gray-200 shrink-0">
       <div class="flex flex-wrap gap-2">
         <button
           v-for="prompt in quickPrompts"
@@ -47,7 +47,7 @@
     </div>
 
     <!-- 输入区域 -->
-    <div class="p-4 bg-white border-t border-gray-200">
+    <div class="p-4 bg-white border-t border-gray-200 shrink-0">
       <div class="flex space-x-2">
         <textarea
           v-model="currentQuestion"

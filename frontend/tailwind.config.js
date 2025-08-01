@@ -1,0 +1,1 @@
+// Tailwind v4 no longer requires config file for basic setup

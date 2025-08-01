@@ -43,88 +43,33 @@ function openPaper(id: string) {
 </script>
 
 <template>
-  <div class="paper-list">
-    <h2>论文列表</h2>
+  <div class="max-w-6xl mx-auto p-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">论文列表</h1>
     
-    <div v-if="loading" class="loading">
-      加载中...
+    <div v-if="loading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <p class="mt-4 text-gray-600">加载中...</p>
     </div>
     
-    <div v-else class="papers">
+    <div v-else class="grid gap-6">
       <div 
         v-for="paper in papers" 
         :key="paper.id"
-        class="paper-card"
+        class="card hover:shadow-lg transition-shadow duration-300 cursor-pointer"
         @click="openPaper(paper.id)"
       >
-        <h3>{{ paper.title }}</h3>
-        <p class="authors">{{ paper.authors.join(', ') }}</p>
-        <p class="meta">
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ paper.title }}</h3>
+        <p class="text-gray-700 mb-2">{{ paper.authors.join(', ') }}</p>
+        <p class="text-sm text-gray-500 mb-3">
           <span v-if="paper.year">{{ paper.year }}</span>
-          <span v-if="paper.journal">• {{ paper.journal }}</span>
+          <span v-if="paper.journal" class="ml-2">• {{ paper.journal }}</span>
         </p>
-        <p v-if="paper.abstract" class="abstract">{{ paper.abstract }}</p>
+        <p v-if="paper.abstract" class="text-gray-600 text-sm leading-relaxed">{{ paper.abstract }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.paper-list {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.paper-list h2 {
-  margin-bottom: 2rem;
-  color: #2c3e50;
-}
-
-.papers {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.paper-card {
-  background: white;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.paper-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.paper-card h3 {
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
-}
-
-.authors {
-  color: #666;
-  margin-bottom: 0.5rem;
-}
-
-.meta {
-  color: #888;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
-.abstract {
-  color: #555;
-  line-height: 1.5;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
+/* All styles handled by Tailwind CSS */
 </style>

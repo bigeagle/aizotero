@@ -30,29 +30,33 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="paper-reader">
-    <div v-if="paper" class="reader-container">
+  <div class="h-screen flex flex-col">
+    <div v-if="paper" class="flex-1 flex gap-4 p-4">
       <!-- 左侧：PDF阅读器 -->
-      <div class="pdf-viewer">
-        <h2>{{ paper.title }}</h2>
-        <div class="pdf-placeholder">
-          <p>PDF阅读器区域</p>
-          <p>论文ID: {{ paper.id }}</p>
+      <div class="flex-1 card overflow-hidden">
+        <h2 class="text-xl font-semibold mb-4">{{ paper.title }}</h2>
+        <div class="h-full bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500">
+          <p class="text-lg mb-2">PDF阅读器区域</p>
+          <p class="text-sm">论文ID: {{ paper.id }}</p>
         </div>
       </div>
       
       <!-- 右侧：AI对话 -->
-      <div class="ai-chat">
-        <h3>AI对话</h3>
-        <div class="chat-container">
-          <div class="chat-messages">
-            <div class="message ai">
-              <p>你好！我是AI助手，可以帮你理解这篇论文。请问有什么想了解的吗？</p>
+      <div class="w-96 card flex flex-col">
+        <h3 class="text-lg font-semibold mb-4">AI对话</h3>
+        <div class="flex-1 flex flex-col">
+          <div class="flex-1 overflow-y-auto mb-4">
+            <div class="bg-blue-50 rounded-lg p-4 mb-3">
+              <p class="text-sm text-blue-800">你好！我是AI助手，可以帮你理解这篇论文。请问有什么想了解的吗？</p>
             </div>
           </div>
-          <div class="chat-input">
-            <input type="text" placeholder="输入你的问题..." />
-            <button>发送</button>
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              placeholder="输入你的问题..." 
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button class="btn btn-primary px-4 py-2">发送</button>
           </div>
         </div>
       </div>
@@ -61,99 +65,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.paper-reader {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.reader-container {
-  display: flex;
-  flex: 1;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.pdf-viewer {
-  flex: 1;
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.pdf-placeholder {
-  height: 600px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #f5f5f5;
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  color: #666;
-}
-
-.ai-chat {
-  width: 400px;
-  background: white;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-}
-
-.ai-chat h3 {
-  margin-bottom: 1rem;
-  color: #2c3e50;
-}
-
-.chat-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  margin-bottom: 1rem;
-}
-
-.message {
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  border-radius: 8px;
-}
-
-.message.ai {
-  background: #e3f2fd;
-  margin-right: 2rem;
-}
-
-.chat-input {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.chat-input input {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.chat-input button {
-  padding: 0.5rem 1rem;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.chat-input button:hover {
-  background: #0056b3;
-}
+/* All styles handled by Tailwind CSS */
 </style>

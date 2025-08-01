@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import AIChat from '@/components/AIChat.vue'
+import AIConfig from '@/components/AIConfig.vue'
 
 const route = useRoute()
 const paperId = route.params.id as string
@@ -18,6 +20,7 @@ interface Paper {
 const paper = ref<Paper | null>(null)
 const chatWidth = ref(400) // 默认400px
 const isResizing = ref(false)
+const showAIConfig = ref(false)
 const pdfUrl = computed(() => {
   if (!paper.value?.pdf_path) return null
   return `/api/v1/papers/${paperId}/pdf`
@@ -108,26 +111,28 @@ onUnmounted(() => {
         <div class="w-1 h-8 bg-gray-400 rounded"></div>
       </div>
 
-      <!-- 右侧：AI对话 -->
+      <!-- 右侧：AI配置和对话 -->
       <div
-        class="bg-white p-4 overflow-hidden flex flex-col"
+        class="bg-white overflow-hidden flex flex-col"
         :style="{ width: chatWidth + 'px' }"
       >
-        <h3 class="text-lg font-semibold mb-4">AI对话</h3>
-        <div class="flex-1 flex flex-col">
-          <div class="flex-1 overflow-y-auto mb-4 space-y-3">
-            <div class="bg-blue-50 rounded-lg p-3">
-              <p class="text-sm text-blue-800">你好！我是AI助手，可以帮你理解这篇论文。请问有什么想了解的吗？</p>
-            </div>
+        <!-- AI配置 -->
+        <div class="p-4 border-b border-gray-200">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-semibold">AI 助手</h3>
+            <button
+              @click="showAIConfig = !showAIConfig"
+              class="text-sm text-blue-600 hover:text-blue-800"
+            >
+              {{ showAIConfig ? '隐藏配置' : '显示配置' }}
+            </button>
           </div>
-          <div class="flex gap-2">
-            <input
-              type="text"
-              placeholder="输入你的问题..."
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">发送</button>
-          </div>
+          <AIConfig v-if="showAIConfig" />
+        </div>
+
+        <!-- AI对话 -->
+        <div class="flex-1">
+          <AIChat :paper-id="paperId" />
         </div>
       </div>
     </div>

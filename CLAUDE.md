@@ -3,19 +3,22 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
+
 AI-powered paper reading assistant for Zotero with web interface. Helps users quickly understand and manage research papers through AI-driven analysis and chat interface.
 
 ## Architecture
+
 - **Backend**: Python + FastAPI + pyzotero
 - **Frontend**: Vue.js + TypeScript + Tailwind CSS v4
 - **Data Source**: Zotero local API
-- **AI Integration**: Multi-model API support
-- **PDF Processing**: pdf2text for text extraction
+- **AI Integration**: OpenAI compatible API support
+- **PDF Processing**: markitdown for PDF → Markdown conversion
 - **Styling**: Tailwind CSS v4 with @tailwindcss/typography plugin
 
 ## Development Setup
 
 ### Backend (FastAPI)
+
 ```bash
 # Install uv (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -30,6 +33,7 @@ uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Frontend (Vue.js)
+
 ```bash
 # Install dependencies
 cd frontend && pnpm install
@@ -42,6 +46,7 @@ pnpm build
 ```
 
 ## Key Commands
+
 - `uv run pytest` - Run tests
 - `uv run black .` - Format Python code
 - `uv run ruff check .` - Lint Python code
@@ -50,11 +55,15 @@ pnpm build
 - `pnpm build` - Build frontend for production
 
 ## Key Files Added
+
 - `frontend/tailwind.config.js` - Tailwind CSS configuration (v4)
 - `frontend/postcss.config.js` - PostCSS configuration for Tailwind
 - `frontend/src/assets/main.css` - Tailwind CSS imports and custom styles
+- `app/services/pdf_parser.py` - PDF to Markdown conversion service
+- `.pre-commit-config.yaml` - Pre-commit hooks for code quality
 
 ## Project Structure
+
 ```
 aizotero/
 ├── app/                 # FastAPI backend
@@ -72,7 +81,8 @@ aizotero/
 │   │   ├── __init__.py
 │   │   └── paper.py     # Paper data models
 │   ├── services/        # Business logic
-│   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   └── pdf_parser.py # PDF to Markdown service
 │   └── tests/           # Backend tests
 │       ├── __init__.py
 │       └── test_main.py
@@ -107,12 +117,14 @@ aizotero/
 ```
 
 ## Core Features
+
 1. **List Page**: Display papers from Zotero, show processing status
 2. **Reader Page**: PDF viewer on left, AI chat on right
 3. **AI Integration**: Paper analysis and Q&A based on content
 4. **Zotero Sync**: Local API integration for paper metadata
 
 ## Quick Start Commands
+
 ```bash
 # Backend
 uv run uvicorn app.main:app --reload

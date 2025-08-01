@@ -4,8 +4,7 @@ PDF解析服务
 """
 
 import os
-import json
-from pathlib import Path
+
 from markitdown import MarkItDown
 
 
@@ -32,7 +31,7 @@ class PDFParserService:
             result = self.parser.convert(pdf_path)
             return result.text_content
         except Exception as e:
-            raise RuntimeError(f"PDF解析失败: {str(e)}")
+            raise RuntimeError(f"PDF解析失败: {str(e)}") from e
 
 
 # 全局实例

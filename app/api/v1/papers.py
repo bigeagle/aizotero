@@ -1,25 +1,25 @@
-from fastapi import APIRouter, HTTPException
-from typing import List, Optional
 from pathlib import Path
 
-from app.models.paper import PaperResponse, PaperRecord
+from fastapi import APIRouter, HTTPException
+
 from app.data.sample_data import (
-    get_sample_papers,
     get_paper_by_id,
-    search_papers,
     get_paper_response_by_id,
+    get_sample_papers,
+    search_papers,
 )
+from app.models.paper import PaperRecord, PaperResponse
 
 router = APIRouter()
 
 
-@router.get("/papers", response_model=List[PaperResponse])
+@router.get("/papers", response_model=list[PaperResponse])
 async def get_papers():
     """获取论文列表（简化版）"""
     return get_sample_papers()
 
 
-@router.get("/papers/records", response_model=List[PaperRecord])
+@router.get("/papers/records", response_model=list[PaperRecord])
 async def get_paper_records():
     """获取完整论文记录列表"""
     from app.data.sample_data import get_sample_records
@@ -39,7 +39,6 @@ async def get_paper(paper_id: str):
 @router.get("/papers/{paper_id}/record", response_model=PaperRecord)
 async def get_paper_record(paper_id: str):
     """获取特定论文的完整记录"""
-    from app.data.sample_data import get_paper_by_id
 
     paper = get_paper_by_id(paper_id)
     if not paper:
@@ -47,16 +46,16 @@ async def get_paper_record(paper_id: str):
     return paper
 
 
-@router.get("/papers/search", response_model=List[PaperResponse])
-async def search_papers_endpoint(query: Optional[str] = None):
+@router.get("/papers/search", response_model=list[PaperResponse])
+async def search_papers_endpoint(query: str | None = None):
     """搜索论文（简化版）"""
     if not query:
         return get_sample_papers()
     return search_papers(query)
 
 
-@router.get("/papers/search/records", response_model=List[PaperRecord])
-async def search_paper_records(query: Optional[str] = None):
+@router.get("/papers/search/records", response_model=list[PaperRecord])
+async def search_paper_records(query: str | None = None):
     """搜索论文并返回完整记录"""
     from app.data.sample_data import get_sample_records
 
@@ -78,9 +77,9 @@ async def search_paper_records(query: Optional[str] = None):
 @router.get("/papers/{paper_id}/pdf")
 async def get_paper_pdf(paper_id: str):
     """获取论文PDF文件"""
-    from app.data.sample_data import get_paper_by_id
-    from fastapi.responses import FileResponse
     from pathlib import Path
+
+    from fastapi.responses import FileResponse
 
     paper = get_paper_by_id(paper_id)
     if not paper:
@@ -107,7 +106,6 @@ async def get_paper_pdf(paper_id: str):
 @router.get("/papers/{paper_id}/markdown")
 async def get_paper_markdown(paper_id: str):
     """获取论文PDF的Markdown格式内容"""
-    from app.data.sample_data import get_paper_by_id
     from app.services.pdf_parser import pdf_parser
 
     paper = get_paper_by_id(paper_id)
@@ -125,7 +123,7 @@ async def get_paper_markdown(paper_id: str):
         markdown = pdf_parser.parse_pdf(str(pdf_path))
         return {"paper_id": paper_id, "markdown": markdown}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF解析失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"PDF解析失败: {str(e)}") from e
 
 
 @router.get("/health")

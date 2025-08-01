@@ -2,10 +2,10 @@
 Sample paper data for development and testing
 """
 
-from typing import List
 from datetime import datetime
 from pathlib import Path
-from app.models.paper import PaperResponse, PaperRecord
+
+from app.models.paper import PaperRecord, PaperResponse
 
 # Calculate base directory for sample files
 SAMPLE_DIR = Path(__file__).parent / "sample"
@@ -208,12 +208,12 @@ SAMPLE_RECORDS = [
 ]
 
 
-def get_sample_records() -> List[PaperRecord]:
+def get_sample_records() -> list[PaperRecord]:
     """Get complete paper records for development and testing"""
     return SAMPLE_RECORDS
 
 
-def get_sample_papers() -> List[PaperResponse]:
+def get_sample_papers() -> list[PaperResponse]:
     """Get simplified paper responses for frontend display"""
     return [
         PaperResponse(
@@ -248,7 +248,7 @@ def get_paper_response_by_id(paper_id: str) -> PaperResponse | None:
     return None
 
 
-def search_papers(query: str) -> List[PaperResponse]:
+def search_papers(query: str) -> list[PaperResponse]:
     """Search papers by title, authors, or abstract"""
     query_lower = query.lower()
     return [

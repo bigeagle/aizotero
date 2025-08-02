@@ -14,7 +14,7 @@ zotero_service = ZoteroService(user_id=0)  # 本地API，user_id为0
 @router.get("/papers", response_model=list[PaperResponse])
 async def get_papers(q: str | None = None, tag: str | None = None, limit: int = 100):
     """获取论文列表（从Zotero）"""
-    papers = zotero_service.get_papers_with_pdfs(limit=limit, q=q, tag=tag)
+    papers = await zotero_service.get_papers_with_pdfs(limit=limit, q=q, tag=tag)
 
     # 转换为PaperResponse模型
     paper_responses = []
@@ -37,7 +37,9 @@ async def get_papers(q: str | None = None, tag: str | None = None, limit: int = 
         pdf_attachments = paper.get("pdf_attachments", [])
         pdf_url = ""
         if pdf_attachments:
-            pdf_url = zotero_service.get_pdf_file_path(pdf_attachments[0]["key"]) or ""
+            pdf_url = (
+                await zotero_service.get_pdf_file_path(pdf_attachments[0]["key"]) or ""
+            )
 
         paper_responses.append(
             PaperResponse(
@@ -61,7 +63,7 @@ async def get_papers(q: str | None = None, tag: str | None = None, limit: int = 
 @router.get("/papers/{paper_id}", response_model=PaperResponse)
 async def get_paper(paper_id: str):
     """获取特定论文（从Zotero）"""
-    paper = zotero_service.get_paper_by_key(paper_id)
+    paper = await zotero_service.get_paper_by_key(paper_id)
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
 
@@ -80,10 +82,12 @@ async def get_paper(paper_id: str):
         authors = ", ".join(author_names)
 
     # 获取PDF附件和URL
-    pdf_attachments = zotero_service.get_pdf_attachments(paper_id)
+    pdf_attachments = await zotero_service.get_pdf_attachments(paper_id)
     pdf_url = ""
     if pdf_attachments:
-        pdf_url = zotero_service.get_pdf_file_path(pdf_attachments[0]["key"]) or ""
+        pdf_url = (
+            await zotero_service.get_pdf_file_path(pdf_attachments[0]["key"]) or ""
+        )
 
     return PaperResponse(
         id=paper.get("key", ""),
@@ -104,17 +108,17 @@ async def get_paper(paper_id: str):
 async def get_paper_pdf(paper_id: str):
     """获取论文PDF文件"""
     # 获取论文详情
-    paper = zotero_service.get_paper_by_key(paper_id)
+    paper = await zotero_service.get_paper_by_key(paper_id)
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
 
     # 获取PDF附件
-    pdfs = zotero_service.get_pdf_attachments(paper_id)
+    pdfs = await zotero_service.get_pdf_attachments(paper_id)
     if not pdfs:
         raise HTTPException(status_code=404, detail="No PDF found")
 
     # 获取PDF文件的实际路径
-    pdf_url = zotero_service.get_pdf_file_path(pdfs[0]["key"])
+    pdf_url = await zotero_service.get_pdf_file_path(pdfs[0]["key"])
     if not pdf_url:
         raise HTTPException(status_code=404, detail="PDF file not accessible")
 
@@ -138,17 +142,17 @@ async def get_paper_pdf(paper_id: str):
 async def get_paper_markdown(paper_id: str):
     """获取论文PDF的Markdown格式内容"""
     # 获取论文详情
-    paper = zotero_service.get_paper_by_key(paper_id)
+    paper = await zotero_service.get_paper_by_key(paper_id)
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
 
     # 获取PDF附件
-    pdfs = zotero_service.get_pdf_attachments(paper_id)
+    pdfs = await zotero_service.get_pdf_attachments(paper_id)
     if not pdfs:
         raise HTTPException(status_code=404, detail="No PDF found")
 
     # 获取PDF文件的实际路径
-    pdf_url = zotero_service.get_pdf_file_path(pdfs[0]["key"])
+    pdf_url = await zotero_service.get_pdf_file_path(pdfs[0]["key"])
     if not pdf_url:
         raise HTTPException(status_code=404, detail="PDF file not accessible")
 

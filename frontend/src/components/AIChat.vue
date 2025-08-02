@@ -150,6 +150,7 @@ async function initializeAI() {
   if (!isConfigured.value) return;
 
   try {
+    aiStore.clearConversation();
     aiStore.setLoading(true);
     aiStore.setError(null);
 

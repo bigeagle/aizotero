@@ -50,9 +50,12 @@ pnpm build
 - `uv run pytest` - Run tests
 - `uv run black .` - Format Python code
 - `uv run ruff check .` - Lint Python code
+- `uv run lefthook run pre-commit` - Run all git hooks
 - `pnpm lint` - Lint frontend code
 - `pnpm dev` - Start frontend dev server
 - `pnpm build` - Build frontend for production
+- `pnpm type-check` - TypeScript type checking
+- `pnpm format` - Format frontend code with Prettier
 
 ## Key Files Added
 
@@ -61,7 +64,7 @@ pnpm build
 - `frontend/src/assets/main.css` - Tailwind CSS imports and custom styles
 - `app/services/pdf_parser.py` - PDF to Markdown conversion service (async with thread pool)
 - `app/services/zotero_service.py` - Zotero API service (async with aiohttp)
-- `.pre-commit-config.yaml` - Pre-commit hooks for code quality
+- `lefthook.yml` - Git hooks for code quality (replaced pre-commit)
 - `frontend/src/components/AIChat.vue` - AI chat interface component
 - `frontend/src/components/AIConfig.vue` - AI configuration management component
 - `frontend/src/services/aiService.ts` - AI service integration
@@ -167,4 +170,10 @@ uv run ruff check . --fix
 
 # Frontend linting
 cd frontend && pnpm lint
+cd frontend && pnpm type-check
+cd frontend && pnpm format
 ```
+
+## Git Hooks
+
+After staging files with `git add`, run `uv run lefthook run pre-commit` to ensure code quality before committing.

@@ -33,9 +33,6 @@ cd aizotero
 # Install backend dependencies with UV (recommended)
 uv sync
 
-# Or use pip
-pip install -r requirements.txt
-
 # Install frontend dependencies
 cd frontend && pnpm install
 ```

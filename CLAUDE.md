@@ -8,11 +8,11 @@ AI-powered paper reading assistant for Zotero with web interface. Helps users qu
 
 ## Architecture
 
-- **Backend**: Python + FastAPI + pyzotero
+- **Backend**: Python + FastAPI + aiohttp (async)
 - **Frontend**: Vue.js + TypeScript + Tailwind CSS v4
-- **Data Source**: Zotero local API
+- **Data Source**: Zotero local API (async via aiohttp)
 - **AI Integration**: OpenAI compatible API support
-- **PDF Processing**: markitdown for PDF → Markdown conversion
+- **PDF Processing**: markitdown with ThreadPoolExecutor (async)
 - **Styling**: Tailwind CSS v4 with @tailwindcss/typography plugin
 
 ## Development Setup
@@ -59,7 +59,8 @@ pnpm build
 - `frontend/tailwind.config.js` - Tailwind CSS configuration (v4)
 - `frontend/postcss.config.js` - PostCSS configuration for Tailwind
 - `frontend/src/assets/main.css` - Tailwind CSS imports and custom styles
-- `app/services/pdf_parser.py` - PDF to Markdown conversion service
+- `app/services/pdf_parser.py` - PDF to Markdown conversion service (async with thread pool)
+- `app/services/zotero_service.py` - Zotero API service (async with aiohttp)
 - `.pre-commit-config.yaml` - Pre-commit hooks for code quality
 
 ## Project Structure
@@ -118,10 +119,12 @@ aizotero/
 
 ## Core Features
 
-1. **List Page**: Display papers from Zotero, show processing status
-2. **Reader Page**: PDF viewer on left, AI chat on right
-3. **AI Integration**: Paper analysis and Q&A based on content
-4. **Zotero Sync**: Local API integration for paper metadata
+1. **List Page**: Display papers from Zotero, show processing status with tag filtering
+2. **Reader Page**: PDF viewer on left, AI chat on right with resizable panels
+3. **AI Integration**: Paper analysis and Q&A based on content with local storage persistence
+4. **Zotero Sync**: Async local API integration for paper metadata
+5. **Search & Filter**: Real-time search and tag-based filtering
+6. **Async Processing**: Non-blocking I/O for all external operations
 
 ## Quick Start Commands
 

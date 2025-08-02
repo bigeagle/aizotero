@@ -222,3 +222,6 @@ logs
 
 # Zotero
 zotero/
+
+# Data directory for file storage
+data/

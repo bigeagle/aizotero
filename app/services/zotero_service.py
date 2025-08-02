@@ -7,12 +7,19 @@ class ZoteroService:
         self.user_id = user_id
         self.base_url = base_url
 
+    def get_session(self) -> aiohttp.ClientSession:
+        """获取配置好的aiohttp会话"""
+        return aiohttp.ClientSession(
+            base_url=self.base_url,
+            timeout=aiohttp.ClientTimeout(total=30),
+        )
+
     async def test_connection(self) -> bool:
         """测试Zotero本地API连接"""
-        async with aiohttp.ClientSession() as session:
+        async with self.get_session() as session:
             try:
                 async with session.get(
-                    f"{self.base_url}/api/users/{self.user_id}/items/top",
+                    f"/api/users/{self.user_id}/items/top",
                     timeout=aiohttp.ClientTimeout(total=5),
                 ) as response:
                     return response.status == 200
@@ -34,9 +41,9 @@ class ZoteroService:
         if tag:
             params["tag"] = tag
 
-        async with aiohttp.ClientSession() as session:
+        async with self.get_session() as session:
             async with session.get(
-                f"{self.base_url}/api/users/{self.user_id}/items/top",
+                f"/api/users/{self.user_id}/items/top",
                 params=params,
             ) as response:
                 response.raise_for_status()
@@ -44,9 +51,9 @@ class ZoteroService:
 
     async def get_paper_by_key(self, key: str) -> dict:
         """根据key获取单篇论文详情"""
-        async with aiohttp.ClientSession() as session:
+        async with self.get_session() as session:
             async with session.get(
-                f"{self.base_url}/api/users/{self.user_id}/items/{key}"
+                f"/api/users/{self.user_id}/items/{key}"
             ) as response:
                 response.raise_for_status()
                 return await response.json()
@@ -54,9 +61,9 @@ class ZoteroService:
     async def get_pdf_attachments(self, item_key: str) -> list[dict]:
         """获取论文的PDF附件"""
         # 获取该论文的子项（attachments）
-        async with aiohttp.ClientSession() as session:
+        async with self.get_session() as session:
             async with session.get(
-                f"{self.base_url}/api/users/{self.user_id}/items/{item_key}/children"
+                f"/api/users/{self.user_id}/items/{item_key}/children"
             ) as response:
                 response.raise_for_status()
                 children = await response.json()
@@ -75,9 +82,9 @@ class ZoteroService:
 
     async def get_pdf_file_path(self, attachment_key: str) -> str | None:
         """获取PDF文件的实际路径（通过302重定向）"""
-        async with aiohttp.ClientSession() as session:
+        async with self.get_session() as session:
             async with session.get(
-                f"{self.base_url}/api/users/{self.user_id}/items/{attachment_key}/file",
+                f"/api/users/{self.user_id}/items/{attachment_key}/file",
                 allow_redirects=False,  # 不要自动跟随重定向
             ) as response:
                 if response.status == 302:

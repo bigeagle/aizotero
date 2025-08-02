@@ -1,6 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+
+// Debounce utility function
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: number
+  return (...args: any[]) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => func(...args), delay)
+  }
+}
 
 interface Paper {
   id: string
@@ -18,11 +27,17 @@ interface Paper {
 
 const papers = ref<Paper[]>([])
 const loading = ref(true)
+const searchQuery = ref('')
 const router = useRouter()
 
-onMounted(async () => {
+const fetchPapers = async (query?: string) => {
+  loading.value = true
   try {
-    const response = await fetch('/api/v1/papers')
+    const params = new URLSearchParams()
+    if (query && query.trim()) {
+      params.set('q', query.trim())
+    }
+    const response = await fetch(`/api/v1/papers?${params.toString()}`)
     papers.value = await response.json()
   } catch (error) {
     console.error('Failed to load papers:', error)
@@ -45,6 +60,17 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+onMounted(() => {
+  fetchPapers()
+})
+
+// Debounced search
+const debouncedSearch = debounce(fetchPapers, 300)
+
+watch(searchQuery, (newQuery) => {
+  debouncedSearch(newQuery)
 })
 
 function openPaper(id: string) {
@@ -55,6 +81,23 @@ function openPaper(id: string) {
 <template>
   <div class="max-w-6xl mx-auto p-8">
     <h1 class="text-3xl font-bold text-gray-900 mb-8">论文列表</h1>
+
+    <!-- 搜索框 -->
+    <div class="mb-6">
+      <div class="relative max-w-md">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="搜索论文标题、摘要或标签..."
+          class="w-full px-4 py-2 pl-10 pr-4 text-gray-700 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        />
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
 
     <div v-if="loading" class="text-center py-12">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>

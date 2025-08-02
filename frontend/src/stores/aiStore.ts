@@ -1,18 +1,12 @@
-import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import type {
-  AIService,
-  LLMConfig,
-  ChatMessage,
-  PaperContext,
-} from "@/services/aiService";
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import type { LLMConfig, ChatMessage, PaperContext } from '@/services/aiService';
 
-export const useAIStore = defineStore("ai", () => {
+export const useAIStore = defineStore('ai', () => {
   const config = ref<LLMConfig>({
-    apiKey: localStorage.getItem("llm_api_key") || "",
-    baseUrl:
-      localStorage.getItem("llm_base_url") || "https://api.openai.com/v1",
-    model: localStorage.getItem("llm_model") || "gpt-3.5-turbo",
+    apiKey: localStorage.getItem('llm_api_key') || '',
+    baseUrl: localStorage.getItem('llm_base_url') || 'https://api.openai.com/v1',
+    model: localStorage.getItem('llm_model') || 'gpt-3.5-turbo',
     maxTokens: 2000,
     temperature: 0.7,
   });
@@ -29,18 +23,14 @@ export const useAIStore = defineStore("ai", () => {
   });
 
   const isConfigured = computed(() => {
-    return (
-      config.value.apiKey.trim() !== "" &&
-      config.value.baseUrl.trim() !== "" &&
-      config.value.model.trim() !== ""
-    );
+    return config.value.apiKey.trim() !== '' && config.value.baseUrl.trim() !== '' && config.value.model.trim() !== '';
   });
 
   function updateConfig(newConfig: Partial<LLMConfig>) {
     config.value = { ...config.value, ...newConfig };
-    localStorage.setItem("llm_api_key", config.value.apiKey);
-    localStorage.setItem("llm_base_url", config.value.baseUrl);
-    localStorage.setItem("llm_model", config.value.model);
+    localStorage.setItem('llm_api_key', config.value.apiKey);
+    localStorage.setItem('llm_base_url', config.value.baseUrl);
+    localStorage.setItem('llm_model', config.value.model);
   }
 
   function setCurrentPaper(paper: PaperContext) {

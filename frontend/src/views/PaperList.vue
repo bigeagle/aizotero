@@ -1,43 +1,43 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
-import { debounce } from '@/utils/debounce'
+import { debounce } from '@/utils/debounce';
 
 interface Paper {
-  id: string
-  title: string
-  authors: string
-  year?: string
-  journal?: string
-  abstract?: string
-  doi?: string
-  url?: string
-  tags: string[]
-  pdf_path?: string
-  has_pdf: boolean
+  id: string;
+  title: string;
+  authors: string;
+  year?: string;
+  journal?: string;
+  abstract?: string;
+  doi?: string;
+  url?: string;
+  tags: string[];
+  pdf_path?: string;
+  has_pdf: boolean;
 }
 
-const papers = ref<Paper[]>([])
-const loading = ref(true)
-const searchQuery = ref('')
-const activeTag = ref<string | null>(null)
-const router = useRouter()
+const papers = ref<Paper[]>([]);
+const loading = ref(true);
+const searchQuery = ref('');
+const activeTag = ref<string | null>(null);
+const router = useRouter();
 
 const fetchPapers = async (query?: string, tag?: string | null) => {
-  loading.value = true
+  loading.value = true;
   try {
-    const params = new URLSearchParams()
+    const params = new URLSearchParams();
     if (query && query.trim()) {
-      params.set('q', query.trim())
+      params.set('q', query.trim());
     }
     if (tag) {
-      params.set('tag', tag)
+      params.set('tag', tag);
     }
-    const response = await fetch(`/api/v1/papers?${params.toString()}`)
-    papers.value = await response.json()
+    const response = await fetch(`/api/v1/papers?${params.toString()}`);
+    papers.value = await response.json();
   } catch (error) {
-    console.error('Failed to load papers:', error)
+    console.error('Failed to load papers:', error);
     // 使用示例数据
     papers.value = [
       {
@@ -51,34 +51,34 @@ const fetchPapers = async (query?: string, tag?: string | null) => {
         url: '',
         tags: [],
         pdf_path: '',
-        has_pdf: true
-      }
-    ]
+        has_pdf: true,
+      },
+    ];
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 onMounted(() => {
-  fetchPapers()
-})
+  fetchPapers();
+});
 
 // Debounced search
 const debouncedSearch = debounce((query?: string) => {
-  fetchPapers(query, activeTag.value)
-}, 300)
+  fetchPapers(query, activeTag.value);
+}, 300);
 
 watch(searchQuery, (newQuery) => {
-  debouncedSearch(newQuery)
-})
+  debouncedSearch(newQuery);
+});
 
 function filterByTag(tag: string | null) {
-  activeTag.value = tag
-  fetchPapers(searchQuery.value, tag)
+  activeTag.value = tag;
+  fetchPapers(searchQuery.value, tag);
 }
 
 function openPaper(id: string) {
-  router.push(`/read/${id}`)
+  router.push(`/read/${id}`);
 }
 </script>
 
@@ -94,7 +94,7 @@ function openPaper(id: string) {
           :class="{
             'px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200': true,
             'bg-gray-200 text-gray-700 hover:bg-gray-300': activeTag !== null,
-            'bg-blue-500 text-white': activeTag === null
+            'bg-blue-500 text-white': activeTag === null,
           }"
         >
           全部
@@ -104,7 +104,7 @@ function openPaper(id: string) {
           :class="{
             'px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200': true,
             'bg-red-100 text-red-800 hover:bg-red-200': activeTag !== '/fav',
-            'bg-red-500 text-white': activeTag === '/fav'
+            'bg-red-500 text-white': activeTag === '/fav',
           }"
         >
           /fav
@@ -114,7 +114,7 @@ function openPaper(id: string) {
           :class="{
             'px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200': true,
             'bg-blue-100 text-blue-800 hover:bg-blue-200': activeTag !== '/unread',
-            'bg-blue-500 text-white': activeTag === '/unread'
+            'bg-blue-500 text-white': activeTag === '/unread',
           }"
         >
           /unread
@@ -132,7 +132,12 @@ function openPaper(id: string) {
           />
           <div class="absolute inset-y-0 left-0 flex items-center pl-3">
             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
           </div>
         </div>
@@ -145,11 +150,7 @@ function openPaper(id: string) {
     </div>
 
     <div v-else class="grid gap-6">
-      <div
-        v-for="paper in papers"
-        :key="paper.id"
-        class="card hover:shadow-lg transition-shadow duration-300"
-      >
+      <div v-for="paper in papers" :key="paper.id" class="card hover:shadow-lg transition-shadow duration-300">
         <h3
           class="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors duration-200"
           @click="openPaper(paper.id)"
@@ -171,7 +172,7 @@ function openPaper(id: string) {
               'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium': true,
               'bg-red-100 text-red-800': tag === '/fav',
               'bg-blue-100 text-blue-800': tag === '/unread',
-              'bg-gray-100 text-gray-800': tag !== '/fav' && tag !== '/unread'
+              'bg-gray-100 text-gray-800': tag !== '/fav' && tag !== '/unread',
             }"
           >
             {{ tag }}

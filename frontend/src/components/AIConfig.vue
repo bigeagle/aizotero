@@ -12,7 +12,7 @@
             :type="showApiKey ? 'text' : 'password'"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="sk-..."
-            />
+          />
           <button
             type="button"
             @click="showApiKey = !showApiKey"
@@ -20,13 +20,28 @@
           >
             <span v-if="showApiKey">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.636 5.636m9.546 9.546l4.242 4.242M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L5.636 5.636m9.546 9.546l4.242 4.242M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </span>
             <span v-else>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
               </svg>
             </span>
           </button>
@@ -70,7 +85,7 @@
             min="100"
             max="8000"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          />
         </div>
         <div>
           <label class="block text-sm font-medium mb-1 text-gray-700">温度</label>
@@ -81,7 +96,7 @@
             max="2"
             step="0.1"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          />
         </div>
       </div>
 
@@ -102,10 +117,7 @@
         >
           {{ testing ? '测试中...' : '测试连接' }}
         </button>
-        <button
-          @click="clearConfig"
-          class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-        >
+        <button @click="clearConfig" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
           清除配置
         </button>
       </div>
@@ -121,7 +133,7 @@ import { debounce } from '@/utils/debounce';
 const aiStore = useAIStore();
 const showApiKey = ref(false);
 const testing = ref(false);
-const models = ref<Array<{id: string, object: string, owned_by: string}>>([]);
+const models = ref<Array<{ id: string; object: string; owned_by: string }>>([]);
 
 const config = computed(() => aiStore.config);
 const isConfigured = computed(() => aiStore.isConfigured);
@@ -133,9 +145,9 @@ const updateConfig = () => {
     baseUrl: config.value.baseUrl,
     model: config.value.model,
     maxTokens: config.value.maxTokens,
-    temperature: config.value.temperature
+    temperature: config.value.temperature,
   });
-}
+};
 
 async function _fetchModels() {
   if (!config.value.apiKey || !config.value.baseUrl) {
@@ -146,14 +158,14 @@ async function _fetchModels() {
   try {
     const response = await fetch(`${config.value.baseUrl}/models`, {
       headers: {
-        'Authorization': `Bearer ${config.value.apiKey}`
+        Authorization: `Bearer ${config.value.apiKey}`,
       },
-      signal: AbortSignal.timeout(1000)
+      signal: AbortSignal.timeout(1000),
     });
 
     if (response.ok) {
       const data = await response.json();
-      models.value = (data.data || []).sort((a: any, b: any) => a.id.localeCompare(b.id));
+      models.value = (data.data || []).sort((a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id));
     } else {
       console.error('获取模型失败:', response.status);
       models.value = [];
@@ -176,19 +188,19 @@ async function testConnection() {
   try {
     const response = await fetch(`${config.value.baseUrl}/models`, {
       headers: {
-        'Authorization': `Bearer ${config.value.apiKey}`
-      }
+        Authorization: `Bearer ${config.value.apiKey}`,
+      },
     });
 
     if (response.ok) {
       const data = await response.json();
-      models.value = (data.data || []).sort((a: any, b: any) => a.id.localeCompare(b.id));
+      models.value = (data.data || []).sort((a: { id: string }, b: { id: string }) => a.id.localeCompare(b.id));
 
       if (models.value.length > 0 && !config.value.model) {
         // 自动选择第一个可用模型
         aiStore.updateConfig({
           ...config.value,
-          model: models.value[0].id
+          model: models.value[0].id,
         });
       }
 
@@ -212,26 +224,30 @@ function clearConfig() {
       baseUrl: 'https://api.openai.com/v1',
       model: 'gpt-3.5-turbo',
       maxTokens: 2000,
-      temperature: 0.7
+      temperature: 0.7,
     });
     models.value = [];
   }
 }
 
 // 监听配置变化，自动获取模型
-watch(() => [config.value.apiKey, config.value.baseUrl], ([newApiKey, newBaseUrl]) => {
-  if (newApiKey && newBaseUrl) {
-    fetchModels();
-  } else {
-    models.value = [];
-  }
-}, { immediate: true });
+watch(
+  () => [config.value.apiKey, config.value.baseUrl],
+  ([newApiKey, newBaseUrl]) => {
+    if (newApiKey && newBaseUrl) {
+      fetchModels();
+    } else {
+      models.value = [];
+    }
+  },
+  { immediate: true }
+);
 
 watch(models, (newModels) => {
-  if(newModels.length == 0) {
-    aiStore.updateConfig({model: ''})
+  if (newModels.length == 0) {
+    aiStore.updateConfig({ model: '' });
   }
-})
+});
 
 // 组件挂载时获取模型
 onMounted(() => {
@@ -242,13 +258,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-input[type="number"] {
+input[type='number'] {
   -moz-appearance: textfield;
 }
 </style>

@@ -12,7 +12,7 @@ export interface LLMConfig {
 }
 
 export interface ChatMessage {
-  role: "user" | "assistant" | "system";
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
 }
@@ -41,22 +41,20 @@ export class AIService {
     this.currentPaper = paperContext;
     this.conversationHistory = [
       {
-        role: "system",
+        role: 'system',
         content: `你是学术论文阅读助手。默认用 markdown 格式回答问题，但不要使用表格，数学公式使用 $LaTeX$ 格式。`,
         timestamp: new Date(),
       },
     ];
   }
 
-  private buildMessages(
-    history: ChatMessage[],
-  ): Array<{ role: string; content: string }> {
+  private buildMessages(history: ChatMessage[]): Array<{ role: string; content: string }> {
     const messages = [...this.conversationHistory];
 
     // 只在第一轮包含完整 PDF 内容
     if (this.conversationHistory.length === 1) {
       messages.push({
-        role: "user",
+        role: 'user',
         content: `论文全文内容：\n${this.currentPaper?.markdown}`,
         timestamp: new Date(),
       });
@@ -64,7 +62,7 @@ export class AIService {
 
     for (const msg of history) {
       // 过滤掉系统消息
-      if (msg.role !== "system") {
+      if (msg.role !== 'system') {
         messages.push({
           role: msg.role,
           content: msg.content,
@@ -83,19 +81,19 @@ export class AIService {
   async chatWithPaper(
     history: ChatMessage[],
     onChunk: (chunk: string) => void,
-    onResponse?: () => void,
+    onResponse?: () => void
   ): Promise<void> {
     if (!this.currentPaper) {
-      throw new Error("请先初始化论文上下文");
+      throw new Error('请先初始化论文上下文');
     }
 
     try {
       const messages = this.buildMessages(history);
 
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify({
@@ -116,10 +114,10 @@ export class AIService {
         onResponse();
       }
 
-      let fullResponse = "";
+      let fullResponse = '';
 
       if (!response.body) {
-        throw new Error("Response body is null");
+        throw new Error('Response body is null');
       }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -129,12 +127,12 @@ export class AIService {
         if (done) break;
 
         const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
+        const lines = chunk.split('\n');
 
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
+          if (line.startsWith('data: ')) {
             const data = line.slice(6);
-            if (data === "[DONE]") return;
+            if (data === '[DONE]') return;
 
             try {
               const parsed = JSON.parse(data);
@@ -144,7 +142,7 @@ export class AIService {
                 onChunk(content);
               }
             } catch (e) {
-              console.warn("Parse error:", e);
+              console.warn('Parse error:', e);
             }
           }
         }
@@ -153,14 +151,14 @@ export class AIService {
       // 保存对话历史
       this.conversationHistory.push(
         {
-          role: "user",
-          content: messages[messages.length - 1]?.content || "",
+          role: 'user',
+          content: messages[messages.length - 1]?.content || '',
           timestamp: new Date(),
         },
-        { role: "assistant", content: fullResponse, timestamp: new Date() },
+        { role: 'assistant', content: fullResponse, timestamp: new Date() }
       );
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error('Chat error:', error);
       throw error;
     }
   }
@@ -180,9 +178,9 @@ export class AIService {
 
 // 全局实例
 export const aiService = new AIService({
-  apiKey: localStorage.getItem("llm_api_key") || "",
-  baseUrl: localStorage.getItem("llm_base_url") || "https://api.openai.com/v1",
-  model: localStorage.getItem("llm_model") || "gpt-3.5-turbo",
+  apiKey: localStorage.getItem('llm_api_key') || '',
+  baseUrl: localStorage.getItem('llm_base_url') || 'https://api.openai.com/v1',
+  model: localStorage.getItem('llm_model') || 'gpt-3.5-turbo',
   maxTokens: 2000,
   temperature: 0.7,
 });

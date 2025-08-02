@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import PaperList from '@/views/PaperList.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import PaperList from '@/views/PaperList.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +15,6 @@ const router = createRouter({
       component: () => import('@/views/PaperReader.vue'),
     },
   ],
-})
+});
 
-export default router
+export default router;

@@ -5,9 +5,7 @@
       <div class="max-w-md">
         <div class="text-6xl mb-4">🤖</div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">AI 助手未配置</h3>
-        <p class="text-gray-600 mb-6">
-          请先配置 AI 服务信息，才能开始与论文对话。
-        </p>
+        <p class="text-gray-600 mb-6">请先配置 AI 服务信息，才能开始与论文对话。</p>
         <button
           @click="$emit('show-config')"
           class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium"
@@ -25,30 +23,15 @@
         :class="message.role === 'user' ? 'text-right' : 'text-left'"
       >
         <div
-          :class="message.role === 'user'
-            ? 'bg-blue-500 text-white inline-block'
-            : 'bg-white inline-block'"
+          :class="message.role === 'user' ? 'bg-blue-500 text-white inline-block' : 'bg-white inline-block'"
           class="px-4 py-2 rounded-lg max-w-xs sm:max-w-md lg:max-w-lg"
         >
           <div
             v-if="message.role === 'assistant'"
-            class="text-sm max-w-none
-              [&>p]:mb-2 [&>p:last-child]:mb-0
-              [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-2
-              [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-2
-              [&>h1]:text-lg [&>h1]:font-bold [&>h1]:mb-2
-              [&>h2]:text-base [&>h2]:font-bold [&>h2]:mb-2
-              [&>h3]:text-sm [&>h3]:font-bold [&>h3]:mb-1
-              [&>blockquote]:border-l-4 [&>blockquote]:border-gray-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:mb-2
-              [&>code]:bg-gray-100 [&>code]:px-1 [&>code]:py-0.5 [&>code]:rounded [&>code]:text-sm
-              [&>pre]:bg-gray-50 [&>pre]:p-2 [&>pre]:rounded [&>pre]:overflow-x-auto [&>pre]:mb-2
-              [&>a]:text-blue-600 [&>a]:hover:text-blue-800 [&>a]:underline"
+            class="text-sm max-w-none [&>p]:mb-2 [&>p:last-child]:mb-0 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:mb-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-2 [&>h1]:text-lg [&>h1]:font-bold [&>h1]:mb-2 [&>h2]:text-base [&>h2]:font-bold [&>h2]:mb-2 [&>h3]:text-sm [&>h3]:font-bold [&>h3]:mb-1 [&>blockquote]:border-l-4 [&>blockquote]:border-gray-300 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:mb-2 [&>code]:bg-gray-100 [&>code]:px-1 [&>code]:py-0.5 [&>code]:rounded [&>code]:text-sm [&>pre]:bg-gray-50 [&>pre]:p-2 [&>pre]:rounded [&>pre]:overflow-x-auto [&>pre]:mb-2 [&>a]:text-blue-600 [&>a]:hover:text-blue-800 [&>a]:underline"
             v-html="renderMarkdown(message.content)"
           ></div>
-          <div
-            v-else
-            class="whitespace-pre-wrap"
-          >{{ message.content }}</div>
+          <div v-else class="whitespace-pre-wrap">{{ message.content }}</div>
           <div class="text-xs opacity-70 mt-2">{{ formatTime(message.timestamp) }}</div>
         </div>
       </div>
@@ -98,7 +81,12 @@
           class="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+            />
           </svg>
         </button>
       </div>
@@ -160,7 +148,7 @@ const quickPrompts = [
   { key: 'contribution', label: '主要贡献', prompt: '这篇论文的主要贡献有哪些？对相关领域有什么影响？' },
   { key: 'limitations', label: '局限性', prompt: '这篇论文有哪些局限性？作者提到了哪些未来工作？' },
   { key: 'related', label: '相关研究', prompt: '这篇论文与哪些相关研究有关联？解决了什么问题？' },
-  { key: 'practical', label: '实际应用', prompt: '这项研究在实际中有哪些应用场景？' }
+  { key: 'practical', label: '实际应用', prompt: '这项研究在实际中有哪些应用场景？' },
 ];
 
 // 初始化 AI 服务
@@ -186,14 +174,13 @@ async function initializeAI() {
       paperId: props.paperId,
       markdown: data.markdown,
       title: data.title || '',
-      authors: data.authors || []
+      authors: data.authors || [],
     };
 
     aiStore.setCurrentPaper(paperContext);
     await aiService.initializeWithPaper(paperContext);
 
     loadConversation();
-
   } catch (err) {
     aiStore.setError(err instanceof Error ? err.message : '未知错误');
   } finally {
@@ -215,7 +202,7 @@ async function sendQuestion() {
     aiStore.addMessage({
       role: 'user',
       content: question,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     let responseContent = '';
@@ -238,7 +225,7 @@ async function sendQuestion() {
         const newMessage = {
           role: 'assistant' as const,
           content: '',
-          timestamp: new Date()
+          timestamp: new Date(),
         };
         aiStore.addMessage(newMessage);
         assistantMessageIndex = aiStore.conversation.length - 1;
@@ -255,7 +242,7 @@ async function sendQuestion() {
 }
 
 // 使用快速提示
-function useQuickPrompt(prompt: any) {
+function useQuickPrompt(prompt: { key: string; label: string; prompt: string }) {
   currentQuestion.value = prompt.prompt;
   sendQuestion();
 }
@@ -282,9 +269,7 @@ function clearError() {
 function exportConversation() {
   if (aiStore.conversation.length === 0) return;
 
-  const content = aiStore.conversation
-    .map(msg => `**${msg.role.toUpperCase()}**: ${msg.content}`)
-    .join('\n\n');
+  const content = aiStore.conversation.map((msg) => `**${msg.role.toUpperCase()}**: ${msg.content}`).join('\n\n');
 
   const blob = new Blob([content], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);
@@ -299,7 +284,7 @@ function exportConversation() {
 function formatTime(timestamp: Date) {
   return new Date(timestamp).toLocaleTimeString('zh-CN', {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
 }
 
@@ -308,10 +293,12 @@ function renderMarkdown(content: string): string {
   if (!content.trim()) return '';
 
   // 使用 marked-katex-extension
-  const markedWithKatex = marked.use(markedKatex({
-    throwOnError: false,
-    displayMode: false
-  }));
+  const markedWithKatex = marked.use(
+    markedKatex({
+      throwOnError: false,
+      displayMode: false,
+    })
+  );
 
   return markedWithKatex.parse(content) as string;
 }
@@ -330,10 +317,10 @@ async function saveConversation() {
   if (conversation.value.length === 0) return;
 
   try {
-    const chatMessages = conversation.value.map(msg => ({
+    const chatMessages = conversation.value.map((msg) => ({
       role: msg.role,
       content: msg.content,
-      timestamp: msg.timestamp.toISOString()
+      timestamp: msg.timestamp.toISOString(),
     }));
 
     const response = await fetch(`/api/v1/papers/${props.paperId}/chat`, {
@@ -376,7 +363,7 @@ async function loadConversation() {
       aiStore.addMessage({
         role: msg.role as 'user' | 'assistant',
         content: msg.content,
-        timestamp: new Date(msg.timestamp)
+        timestamp: new Date(msg.timestamp),
       });
     }
 

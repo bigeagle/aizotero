@@ -1,0 +1,47 @@
+# Lefthook configuration
+# Docs: https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    python-format:
+      glob: "*.py"
+      run: uv run black {staged_files}
+    python-lint:
+      glob: "*.py"
+      run: uv run ruff check {staged_files} --fix
+    typescript-format:
+      glob: "*.{ts,vue,json}"
+      run: cd frontend && pnpm format
+    typescript-lint:
+      glob: "*.{ts,vue}"
+      run: cd frontend && pnpm lint
+    typescript-type-check:
+      glob: "*.{ts,vue}"
+      run: cd frontend && pnpm type-check
+    trailing-whitespace:
+      glob: "*"
+      exclude: 
+        - "*.lock"
+        - "*.svg"
+        - "*.png"
+        - "*.jpg"
+      run: |
+        if [ -n "$STAGED_FILES" ]; then
+          echo "Fixing trailing whitespace..."
+          sed -i '' 's/[[:space:]]*$//' $STAGED_FILES || sed -i 's/[[:space:]]*$//' $STAGED_FILES
+        fi
+    end-of-file:
+      glob: "*"
+      exclude: 
+        - "*.lock"
+        - "*.svg"
+        - "*.png"
+        - "*.jpg"
+      run: |
+        if [ -n "$STAGED_FILES" ]; then
+          echo "Fixing end of file..."
+          for file in $STAGED_FILES; do
+            tail -c1 "$file" | read -r _ || echo >> "$file"
+          done
+        fi

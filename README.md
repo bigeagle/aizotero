@@ -1,6 +1,10 @@
 # AI Paper Assistant - AIZotero
 
+[![Built with Kimi K2](https://img.shields.io/badge/Built_with-Kimi_K2-blue)](https://www.kimi.com/)
+
 An AI-powered paper reading assistant for Zotero with a web interface that helps users quickly understand and manage research papers.
+
+**🤖 Built with Kimi K2 + Claude Code** - 99% of this codebase was generated using advanced AI coding assistants
 
 ## Features
 

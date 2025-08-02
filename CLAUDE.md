@@ -174,6 +174,13 @@ cd frontend && pnpm type-check
 cd frontend && pnpm format
 ```
 
-## Git Hooks
+## Notice
 
-After staging files with `git add`, run `uv run lefthook run pre-commit` to ensure code quality before committing.
+### Git Hooks
+
+1. After staging files with `git add`, ALWAYS run `uv run lefthook run pre-commit` to ensure code quality before committing.
+2. If git commit failed because of pre-commit checking, if auto-fixed, retry withou `--amend`
+
+### Coding Style
+1. DO NOT write overly broad `try ... except` blocks that catch all exceptions.
+

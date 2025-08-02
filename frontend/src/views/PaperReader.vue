@@ -3,11 +3,18 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AIChat from '@/components/AIChat.vue';
 import AIConfig from '@/components/AIConfig.vue';
+import { zoteroService, type ZoteroPaper } from '@/services/zoteroService';
+import { arxivService, type ArxivPaper } from '@/services/arxivService';
 
+interface Props {
+  source: 'zotero' | 'arxiv';
+}
+
+const props = defineProps<Props>();
 const route = useRoute();
 const router = useRouter();
-const paperId = route.params.id as string;
 
+// 统一 Paper 接口
 interface Paper {
   id: string;
   title: string;
@@ -18,29 +25,55 @@ interface Paper {
   pdf_path?: string;
 }
 
+const paperId = route.params.id as string;
+
 const paper = ref<Paper | null>(null);
-const chatWidth = ref(600); // 默认400px
+const chatWidth = ref(600);
 const isResizing = ref(false);
 const showAIConfig = ref(false);
+const loading = ref(true);
+
 const pdfUrl = computed(() => {
   if (!paper.value?.pdf_path) return null;
-  return `/api/v1/papers/${paperId}/pdf`;
+
+  const id = route.params.id as string;
+  if (props.source === 'arxiv') {
+    return arxivService.getPdfURL(id);
+  } else {
+    return zoteroService.getPdfURL(id);
+  }
 });
 
 async function fetchPaper() {
+  loading.value = true;
   try {
-    const response = await fetch(`/api/v1/papers/${paperId}`);
-    if (response.ok) {
-      paper.value = await response.json();
+    const id = route.params.id as string;
+    let paperData: ZoteroPaper | ArxivPaper;
+
+    if (props.source === 'arxiv') {
+      paperData = await arxivService.getPaper(id);
+    } else {
+      paperData = await zoteroService.getPaper(id);
     }
+
+    paper.value = {
+      id: paperData.id,
+      title: paperData.title,
+      authors: paperData.authors,
+      year: paperData.year,
+      journal: paperData.journal,
+      abstract: paperData.abstract,
+      pdf_path: paperData.pdf_path,
+    };
   } catch (error) {
     console.error('Failed to fetch paper:', error);
-    // Fallback to basic paper info
     paper.value = {
       id: paperId,
       title: '论文加载中...',
       authors: '未知作者',
     };
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -84,7 +117,12 @@ onUnmounted(() => {
       <div class="flex-1 bg-white p-4 overflow-hidden">
         <div class="h-full flex flex-col">
           <div class="flex items-center justify-between mb-4 px-2">
-            <h2 class="text-xl font-semibold">{{ paper.title }}</h2>
+            <div class="flex items-center gap-2">
+              <span v-if="loading" class="text-sm text-gray-500">
+                {{ props.source === 'arxiv' ? 'arXiv' : 'Zotero' }} 加载中...
+              </span>
+              <h2 class="text-xl font-semibold">{{ paper.title }}</h2>
+            </div>
             <button
               @click="router.push('/')"
               class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
@@ -133,7 +171,7 @@ onUnmounted(() => {
 
         <!-- AI对话 -->
         <div class="flex-1 overflow-hidden">
-          <AIChat :paper-id="paperId" @show-config="showAIConfig = true" />
+          <AIChat :paper-id="paperId" :source="props.source" @show-config="showAIConfig = true" />
         </div>
       </div>
     </div>

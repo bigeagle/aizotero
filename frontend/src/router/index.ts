@@ -10,9 +10,16 @@ const router = createRouter({
       component: PaperList,
     },
     {
-      path: '/read/:id',
-      name: 'paper-reader',
+      path: '/read/zotero/:id',
+      name: 'paper-reader-zotero',
       component: () => import('@/views/PaperReader.vue'),
+      props: { source: 'zotero' },
+    },
+    {
+      path: '/read/arxiv/:id',
+      name: 'paper-reader-arxiv',
+      component: () => import('@/views/PaperReader.vue'),
+      props: { source: 'arxiv' },
     },
   ],
 });

@@ -120,12 +120,15 @@
 import { ref, computed, nextTick, watch, onMounted } from 'vue';
 import { useAIStore } from '@/stores/aiStore';
 import { AIService } from '@/services/aiService';
+import { zoteroService } from '@/services/zoteroService';
+import { arxivService } from '@/services/arxivService';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
 import 'katex/dist/katex.css';
 
 interface Props {
   paperId: string;
+  source?: 'zotero' | 'arxiv';
 }
 
 const props = defineProps<Props>();
@@ -164,17 +167,19 @@ async function initializeAI() {
     aiStore.setError(null);
 
     // 获取论文内容
-    const response = await fetch(`/api/v1/papers/${props.paperId}/markdown`);
-    if (!response.ok) throw new Error('获取论文内容失败');
-
-    const data = await response.json();
+    let data;
+    if (props.source === 'arxiv') {
+      data = await arxivService.getMarkdown(props.paperId);
+    } else {
+      data = await zoteroService.getMarkdown(props.paperId);
+    }
 
     // 初始化论文上下文
     const paperContext = {
       paperId: props.paperId,
       markdown: data.markdown,
-      title: data.title || '',
-      authors: data.authors || [],
+      title: '',
+      authors: [],
     };
 
     aiStore.setCurrentPaper(paperContext);
@@ -323,7 +328,10 @@ async function saveConversation() {
       timestamp: msg.timestamp.toISOString(),
     }));
 
-    const response = await fetch(`/api/v1/papers/${props.paperId}/chat`, {
+    const endpoint =
+      props.source === 'arxiv' ? `/api/v1/arxiv/${props.paperId}/chat` : `/api/v1/papers/${props.paperId}/chat`;
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -347,7 +355,10 @@ async function loadConversation() {
   aiStore.clearConversation();
 
   try {
-    const response = await fetch(`/api/v1/papers/${props.paperId}/chat`);
+    const endpoint =
+      props.source === 'arxiv' ? `/api/v1/arxiv/${props.paperId}/chat` : `/api/v1/papers/${props.paperId}/chat`;
+
+    const response = await fetch(endpoint);
     if (!response.ok) {
       if (response.status === 404) {
         // 没有找到聊天记录，这是正常的

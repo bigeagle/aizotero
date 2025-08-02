@@ -3,22 +3,10 @@ import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { debounce } from '@/utils/debounce';
+import { zoteroService, type ZoteroPaper } from '@/services/zoteroService';
+import ArxivInput from '@/components/ArxivInput.vue';
 
-interface Paper {
-  id: string;
-  title: string;
-  authors: string;
-  year?: string;
-  journal?: string;
-  abstract?: string;
-  doi?: string;
-  url?: string;
-  tags: string[];
-  pdf_path?: string;
-  has_pdf: boolean;
-}
-
-const papers = ref<Paper[]>([]);
+const papers = ref<ZoteroPaper[]>([]);
 const loading = ref(true);
 const searchQuery = ref('');
 const activeTag = ref<string | null>(null);
@@ -27,15 +15,7 @@ const router = useRouter();
 const fetchPapers = async (query?: string, tag?: string | null) => {
   loading.value = true;
   try {
-    const params = new URLSearchParams();
-    if (query && query.trim()) {
-      params.set('q', query.trim());
-    }
-    if (tag) {
-      params.set('tag', tag);
-    }
-    const response = await fetch(`/api/v1/papers?${params.toString()}`);
-    papers.value = await response.json();
+    papers.value = await zoteroService.getPapers(query, tag);
   } catch (error) {
     console.error('Failed to load papers:', error);
     // 使用示例数据
@@ -78,7 +58,7 @@ function filterByTag(tag: string | null) {
 }
 
 function openPaper(id: string) {
-  router.push(`/read/${id}`);
+  router.push(`/read/zotero/${id}`);
 }
 </script>
 
@@ -86,6 +66,11 @@ function openPaper(id: string) {
   <div class="max-w-6xl mx-auto">
     <div class="flex items-center gap-4 mb-4 flex-wrap">
       <h1 class="text-3xl font-bold text-gray-900">论文列表</h1>
+
+      <!-- arXiv 输入组件 -->
+      <div class="w-full mt-4">
+        <ArxivInput />
+      </div>
 
       <!-- 标签过滤器 -->
       <div class="flex gap-2">

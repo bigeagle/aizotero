@@ -79,12 +79,12 @@ function openPaper(id: string) {
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto p-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">论文列表</h1>
+  <div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-3xl font-bold text-gray-900">论文列表</h1>
 
-    <!-- 搜索框 -->
-    <div class="mb-6">
-      <div class="relative max-w-md">
+      <!-- 搜索框 -->
+      <div class="relative w-full max-w-md">
         <input
           v-model="searchQuery"
           type="text"
@@ -108,15 +108,36 @@ function openPaper(id: string) {
       <div
         v-for="paper in papers"
         :key="paper.id"
-        class="card hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-        @click="openPaper(paper.id)"
+        class="card hover:shadow-lg transition-shadow duration-300"
       >
-        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ paper.title }}</h3>
+        <h3
+          class="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors duration-200"
+          @click="openPaper(paper.id)"
+        >
+          {{ paper.title }}
+        </h3>
         <p class="text-gray-700 mb-2">{{ paper.authors }}</p>
         <p class="text-sm text-gray-500 mb-3">
           <span v-if="paper.year">{{ paper.year }}</span>
           <span v-if="paper.journal" class="ml-2">• {{ paper.journal }}</span>
         </p>
+
+        <!-- Tags with special styling -->
+        <div v-if="paper.tags.length" class="mb-3 flex flex-wrap gap-2">
+          <span
+            v-for="tag in paper.tags"
+            :key="tag"
+            :class="{
+              'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium': true,
+              'bg-red-100 text-red-800': tag === '♥️',
+              'bg-blue-100 text-blue-800': tag === '/unread',
+              'bg-gray-100 text-gray-800': tag !== '♥️' && tag !== '/unread'
+            }"
+          >
+            {{ tag }}
+          </span>
+        </div>
+
         <p v-if="paper.abstract" class="text-gray-600 text-sm leading-relaxed">{{ paper.abstract }}</p>
       </div>
     </div>

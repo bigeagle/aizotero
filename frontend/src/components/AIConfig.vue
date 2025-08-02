@@ -12,8 +12,7 @@
             :type="showApiKey ? 'text' : 'password'"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="sk-..."
-            @input="updateConfig"
-          />
+            />
           <button
             type="button"
             @click="showApiKey = !showApiKey"
@@ -42,7 +41,6 @@
           type="url"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="https://api.openai.com/v1"
-          @input="updateConfig"
         />
       </div>
 
@@ -53,7 +51,7 @@
           v-model="config.model"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           @change="updateConfig"
-          :disabled="!isConfigured || models.length === 0"
+          :disabled="models.length === 0"
         >
           <option v-if="models.length === 0" value="">请先连接获取模型</option>
           <option v-for="model in models" :key="model.id" :value="model.id">
@@ -72,8 +70,7 @@
             min="100"
             max="8000"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            @input="updateConfig"
-          />
+            />
         </div>
         <div>
           <label class="block text-sm font-medium mb-1 text-gray-700">温度</label>
@@ -84,8 +81,7 @@
             max="2"
             step="0.1"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            @input="updateConfig"
-          />
+            />
         </div>
       </div>
 
@@ -101,7 +97,7 @@
       <div class="mt-4 flex space-x-2">
         <button
           @click="testConnection"
-          :disabled="!isConfigured || testing"
+          :disabled="testing"
           class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600"
         >
           {{ testing ? '测试中...' : '测试连接' }}
@@ -120,6 +116,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useAIStore } from '@/stores/aiStore';
+import { debounce } from '@/utils/debounce';
 
 const aiStore = useAIStore();
 const showApiKey = ref(false);
@@ -130,7 +127,7 @@ const config = computed(() => aiStore.config);
 const isConfigured = computed(() => aiStore.isConfigured);
 const tokenUsage = computed(() => aiStore.tokenUsage);
 
-function updateConfig() {
+const updateConfig = () => {
   aiStore.updateConfig({
     apiKey: config.value.apiKey,
     baseUrl: config.value.baseUrl,
@@ -140,7 +137,7 @@ function updateConfig() {
   });
 }
 
-async function fetchModels() {
+async function _fetchModels() {
   if (!config.value.apiKey || !config.value.baseUrl) {
     models.value = [];
     return;
@@ -150,7 +147,8 @@ async function fetchModels() {
     const response = await fetch(`${config.value.baseUrl}/models`, {
       headers: {
         'Authorization': `Bearer ${config.value.apiKey}`
-      }
+      },
+      signal: AbortSignal.timeout(1000)
     });
 
     if (response.ok) {
@@ -165,6 +163,8 @@ async function fetchModels() {
     models.value = [];
   }
 }
+
+const fetchModels = debounce(_fetchModels, 1000);
 
 async function testConnection() {
   if (!config.value.apiKey) {
@@ -226,6 +226,12 @@ watch(() => [config.value.apiKey, config.value.baseUrl], ([newApiKey, newBaseUrl
     models.value = [];
   }
 }, { immediate: true });
+
+watch(models, (newModels) => {
+  if(newModels.length == 0) {
+    aiStore.updateConfig({model: ''})
+  }
+})
 
 // 组件挂载时获取模型
 onMounted(() => {

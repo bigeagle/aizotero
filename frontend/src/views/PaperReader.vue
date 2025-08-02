@@ -139,7 +139,10 @@ onUnmounted(() => {
 
         <!-- AI对话 -->
         <div class="flex-1 overflow-hidden">
-          <AIChat :paper-id="paperId" />
+          <AIChat
+            :paper-id="paperId"
+            @show-config="showAIConfig = true"
+          />
         </div>
       </div>
     </div>

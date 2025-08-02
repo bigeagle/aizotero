@@ -1,7 +1,24 @@
 <template>
   <div class="flex flex-col h-full bg-gray-50 max-h-full">
+    <!-- 配置提示 -->
+    <div v-if="!isConfigured" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
+      <div class="max-w-md">
+        <div class="text-6xl mb-4">🤖</div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">AI 助手未配置</h3>
+        <p class="text-gray-600 mb-6">
+          请先配置 AI 服务信息，才能开始与论文对话。
+        </p>
+        <button
+          @click="$emit('show-config')"
+          class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium"
+        >
+          立即配置 AI
+        </button>
+      </div>
+    </div>
+
     <!-- 对话历史 -->
-    <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth min-h-0">
+    <div v-else ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth min-h-0">
       <div
         v-for="(message, index) in conversation"
         :key="index"
@@ -147,7 +164,10 @@ const quickPrompts = [
 
 // 初始化 AI 服务
 async function initializeAI() {
-  if (!isConfigured.value) return;
+  if (!isConfigured.value) {
+    aiStore.setError('请先配置 AI 服务信息');
+    return;
+  }
 
   try {
     aiStore.clearConversation();

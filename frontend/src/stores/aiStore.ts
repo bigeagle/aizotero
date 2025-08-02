@@ -29,7 +29,11 @@ export const useAIStore = defineStore("ai", () => {
   });
 
   const isConfigured = computed(() => {
-    return config.value.apiKey.trim() !== "";
+    return (
+      config.value.apiKey.trim() !== "" &&
+      config.value.baseUrl.trim() !== "" &&
+      config.value.model.trim() !== ""
+    );
   });
 
   function updateConfig(newConfig: Partial<LLMConfig>) {

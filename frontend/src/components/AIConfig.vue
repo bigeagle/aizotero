@@ -53,21 +53,12 @@
           v-model="config.model"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           @change="updateConfig"
+          :disabled="!isConfigured || models.length === 0"
         >
-          <optgroup label="OpenAI">
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-            <option value="gpt-4">GPT-4</option>
-            <option value="gpt-4-turbo-preview">GPT-4 Turbo Preview</option>
-          </optgroup>
-          <optgroup label="Anthropic">
-            <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
-            <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
-            <option value="claude-3-opus-20240229">Claude 3 Opus</option>
-          </optgroup>
-          <optgroup label="本地/其他">
-            <option value="llama2">Llama 2</option>
-            <option value="custom">自定义模型</option>
-          </optgroup>
+          <option v-if="models.length === 0" value="">请先连接获取模型</option>
+          <option v-for="model in models" :key="model.id" :value="model.id">
+            {{ model.id }}
+          </option>
         </select>
       </div>
 
@@ -127,12 +118,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useAIStore } from '@/stores/aiStore';
 
 const aiStore = useAIStore();
 const showApiKey = ref(false);
 const testing = ref(false);
+const models = ref<Array<{id: string, object: string, owned_by: string}>>([]);
 
 const config = computed(() => aiStore.config);
 const isConfigured = computed(() => aiStore.isConfigured);
@@ -146,6 +138,32 @@ function updateConfig() {
     maxTokens: config.value.maxTokens,
     temperature: config.value.temperature
   });
+}
+
+async function fetchModels() {
+  if (!config.value.apiKey || !config.value.baseUrl) {
+    models.value = [];
+    return;
+  }
+
+  try {
+    const response = await fetch(`${config.value.baseUrl}/models`, {
+      headers: {
+        'Authorization': `Bearer ${config.value.apiKey}`
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      models.value = (data.data || []).sort((a, b) => a.id.localeCompare(b.id));
+    } else {
+      console.error('获取模型失败:', response.status);
+      models.value = [];
+    }
+  } catch (error) {
+    console.error('获取模型错误:', error);
+    models.value = [];
+  }
 }
 
 async function testConnection() {
@@ -163,12 +181,25 @@ async function testConnection() {
     });
 
     if (response.ok) {
-      alert('✅ 连接成功！AI 服务已就绪');
+      const data = await response.json();
+      models.value = (data.data || []).sort((a, b) => a.id.localeCompare(b.id));
+
+      if (models.value.length > 0 && !config.value.model) {
+        // 自动选择第一个可用模型
+        aiStore.updateConfig({
+          ...config.value,
+          model: models.value[0].id
+        });
+      }
+
+      alert(`✅ 连接成功！发现 ${models.value.length} 个可用模型`);
     } else {
       alert(`❌ 连接失败: ${response.status} ${response.statusText}`);
+      models.value = [];
     }
   } catch (error) {
     alert(`❌ 网络错误: ${error}`);
+    models.value = [];
   } finally {
     testing.value = false;
   }
@@ -183,8 +214,25 @@ function clearConfig() {
       maxTokens: 2000,
       temperature: 0.7
     });
+    models.value = [];
   }
 }
+
+// 监听配置变化，自动获取模型
+watch(() => [config.value.apiKey, config.value.baseUrl], ([newApiKey, newBaseUrl]) => {
+  if (newApiKey && newBaseUrl) {
+    fetchModels();
+  } else {
+    models.value = [];
+  }
+}, { immediate: true });
+
+// 组件挂载时获取模型
+onMounted(() => {
+  if (config.value.apiKey && config.value.baseUrl) {
+    fetchModels();
+  }
+});
 </script>
 
 <style scoped>

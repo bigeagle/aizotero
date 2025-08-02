@@ -62,6 +62,11 @@ pnpm build
 - `app/services/pdf_parser.py` - PDF to Markdown conversion service (async with thread pool)
 - `app/services/zotero_service.py` - Zotero API service (async with aiohttp)
 - `.pre-commit-config.yaml` - Pre-commit hooks for code quality
+- `frontend/src/components/AIChat.vue` - AI chat interface component
+- `frontend/src/components/AIConfig.vue` - AI configuration management component
+- `frontend/src/services/aiService.ts` - AI service integration
+- `frontend/src/stores/aiStore.ts` - Pinia store for AI state management
+- `app/data/` - Sample data and utilities
 
 ## Project Structure
 
@@ -78,12 +83,17 @@ aizotero/
 │   ├── core/            # Configuration
 │   │   ├── __init__.py
 │   │   └── config.py    # Pydantic settings
+│   ├── data/            # Sample data and utilities
+│   │   ├── __init__.py
+│   │   ├── sample/
+│   │   └── sample_data.py
 │   ├── models/          # Pydantic models
 │   │   ├── __init__.py
 │   │   └── paper.py     # Paper data models
 │   ├── services/        # Business logic
 │   │   ├── __init__.py
-│   │   └── pdf_parser.py # PDF to Markdown service
+│   │   ├── pdf_parser.py # PDF to Markdown service
+│   │   └── zotero_service.py # Zotero API service
 │   └── tests/           # Backend tests
 │       ├── __init__.py
 │       └── test_main.py
@@ -91,9 +101,11 @@ aizotero/
 │   ├── package.json     # Frontend dependencies
 │   ├── pnpm-lock.yaml   # Package lock
 │   ├── vite.config.ts   # Vite configuration
+│   ├── tailwind.config.js # Tailwind CSS configuration
+│   ├── postcss.config.js # PostCSS configuration
 │   ├── tsconfig.json    # TypeScript config
+│   ├── index.html       # HTML entry point
 │   └── src/
-│       ├── __init__.py
 │       ├── main.ts           # Vue app entry
 │       ├── App.vue           # Root component
 │       ├── env.d.ts          # TypeScript declarations
@@ -103,12 +115,21 @@ aizotero/
 │       │   ├── PaperList.vue
 │       │   └── PaperReader.vue
 │       ├── assets/           # Static assets
-│       │   └── main.css
+│       │   └── main.css      # Tailwind CSS imports
 │       ├── components/       # Reusable components
+│       │   ├── AIChat.vue
+│       │   └── AIConfig.vue
+│       ├── services/         # Service integrations
+│       │   └── aiService.ts
 │       ├── stores/           # Pinia stores
+│       │   └── aiStore.ts
+│       ├── types/            # TypeScript type definitions
 │       └── utils/            # Utility functions
+├── data/                  # Cache and data storage
+│   └── cache/             # Application cache
 ├── docs/                  # Design documents
-│   └── 0001-design.md     # Project requirements
+│   ├── 0001-design.md     # Project requirements
+│   └── 0002-frontend-ai-design.md # Frontend AI integration design
 ├── .env.example          # Environment template
 ├── .gitignore            # Git ignore rules
 ├── pyproject.toml        # Python project configuration
@@ -125,6 +146,8 @@ aizotero/
 4. **Zotero Sync**: Async local API integration for paper metadata
 5. **Search & Filter**: Real-time search and tag-based filtering
 6. **Async Processing**: Non-blocking I/O for all external operations
+7. **AI Configuration**: Frontend component for managing AI API settings
+8. **Caching**: PDF processing results cached in `data/cache/markitdown/`
 
 ## Quick Start Commands
 

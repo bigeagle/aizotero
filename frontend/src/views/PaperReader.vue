@@ -10,8 +10,8 @@ const paperId = route.params.id as string
 interface Paper {
   id: string
   title: string
-  authors: string[]
-  year?: number
+  authors: string
+  year?: string
   journal?: string
   abstract?: string
   pdf_path?: string
@@ -28,7 +28,7 @@ const pdfUrl = computed(() => {
 
 async function fetchPaper() {
   try {
-    const response = await fetch(`/api/v1/papers/${paperId}/record`)
+    const response = await fetch(`/api/v1/papers/${paperId}`)
     if (response.ok) {
       paper.value = await response.json()
     }
@@ -38,7 +38,7 @@ async function fetchPaper() {
     paper.value = {
       id: paperId,
       title: '论文加载中...',
-      authors: [],
+      authors: '未知作者',
     }
   }
 }

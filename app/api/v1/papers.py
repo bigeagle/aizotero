@@ -1,129 +1,394 @@
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 
-from app.data.sample_data import (
-    get_paper_by_id,
-    get_paper_response_by_id,
-    get_sample_papers,
-    search_papers,
-)
 from app.models.paper import PaperRecord, PaperResponse
+from app.services.pdf_parser import pdf_parser
+from app.services.zotero_service import ZoteroService
 
 router = APIRouter()
+zotero_service = ZoteroService(user_id=0)  # 本地API，user_id为0
 
 
 @router.get("/papers", response_model=list[PaperResponse])
 async def get_papers():
-    """获取论文列表（简化版）"""
-    return get_sample_papers()
+    """获取论文列表（从Zotero）"""
+    try:
+        papers = zotero_service.get_papers_with_pdfs(limit=100)
+
+        # 转换为PaperResponse模型
+        paper_responses = []
+        for paper in papers:
+            data = paper.get("data", {})
+            authors = ""
+            if "creators" in data:
+                author_names = []
+                for creator in data["creators"]:
+                    if creator.get("creatorType") == "author":
+                        name_parts = []
+                        if creator.get("firstName"):
+                            name_parts.append(creator["firstName"])
+                        if creator.get("lastName"):
+                            name_parts.append(creator["lastName"])
+                        author_names.append(" ".join(name_parts))
+                authors = ", ".join(author_names)
+
+            # 获取PDF附件和URL
+            pdf_attachments = paper.get("pdf_attachments", [])
+            pdf_url = ""
+            if pdf_attachments:
+                pdf_url = (
+                    zotero_service.get_pdf_file_path(pdf_attachments[0]["key"]) or ""
+                )
+
+            paper_responses.append(
+                PaperResponse(
+                    id=paper.get("key", ""),
+                    title=data.get("title", "无标题"),
+                    authors=authors,
+                    year=data.get("date", ""),
+                    journal=data.get("publicationTitle", ""),
+                    abstract=data.get("abstractNote", ""),
+                    doi=data.get("DOI", ""),
+                    url=data.get("url", ""),
+                    tags=[tag.get("tag", "") for tag in data.get("tags", [])],
+                    pdf_path=pdf_url,
+                    has_pdf=len(pdf_attachments) > 0,
+                )
+            )
+
+        return paper_responses
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/papers/records", response_model=list[PaperRecord])
 async def get_paper_records():
-    """获取完整论文记录列表"""
-    from app.data.sample_data import get_sample_records
+    """获取完整论文记录列表（从Zotero）"""
+    try:
+        papers = zotero_service.get_papers_with_pdfs(limit=100)
 
-    return get_sample_records()
+        # 转换为PaperRecord模型
+        paper_records = []
+        for paper in papers:
+            data = paper.get("data", {})
+            authors = ""
+            if "creators" in data:
+                author_names = []
+                for creator in data["creators"]:
+                    if creator.get("creatorType") == "author":
+                        name_parts = []
+                        if creator.get("firstName"):
+                            name_parts.append(creator["firstName"])
+                        if creator.get("lastName"):
+                            name_parts.append(creator["lastName"])
+                        author_names.append(" ".join(name_parts))
+                authors = ", ".join(author_names)
+
+            paper_records.append(
+                PaperRecord(
+                    id=paper.get("key", ""),
+                    title=data.get("title", "无标题"),
+                    authors=authors,
+                    year=data.get("date", ""),
+                    journal=data.get("publicationTitle", ""),
+                    abstract=data.get("abstractNote", ""),
+                    doi=data.get("DOI", ""),
+                    url=data.get("url", ""),
+                    tags=[tag.get("tag", "") for tag in data.get("tags", [])],
+                    collections=[],  # TODO: 获取集合信息
+                    keywords=[],  # TODO: 从其他字段提取
+                    notes=data.get("notes", ""),
+                    date_added=datetime.fromisoformat(
+                        "2024-01-01T00:00:00Z"
+                    ),  # TODO: 真实日期
+                    date_modified=datetime.fromisoformat(
+                        "2024-01-01T00:00:00Z"
+                    ),  # TODO: 真实日期
+                    zotero_key=paper.get("key", ""),
+                    zotero_version=paper.get("version", 0),
+                    pdf_path=paper.get("pdf_path", ""),
+                    extra={},
+                )
+            )
+
+        return paper_records
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/papers/{paper_id}", response_model=PaperResponse)
 async def get_paper(paper_id: str):
-    """获取特定论文（简化版）"""
-    paper = get_paper_response_by_id(paper_id)
-    if not paper:
-        raise HTTPException(status_code=404, detail="Paper not found")
-    return paper
+    """获取特定论文（从Zotero）"""
+    try:
+        paper = zotero_service.get_paper_by_key(paper_id)
+        if not paper:
+            raise HTTPException(status_code=404, detail="Paper not found")
+
+        data = paper.get("data", {})
+        authors = ""
+        if "creators" in data:
+            author_names = []
+            for creator in data["creators"]:
+                if creator.get("creatorType") == "author":
+                    name_parts = []
+                    if creator.get("firstName"):
+                        name_parts.append(creator["firstName"])
+                    if creator.get("lastName"):
+                        name_parts.append(creator["lastName"])
+                    author_names.append(" ".join(name_parts))
+            authors = ", ".join(author_names)
+
+        # 获取PDF附件和URL
+        pdf_attachments = zotero_service.get_pdf_attachments(paper_id)
+        pdf_url = ""
+        if pdf_attachments:
+            pdf_url = zotero_service.get_pdf_file_path(pdf_attachments[0]["key"]) or ""
+
+        return PaperResponse(
+            id=paper.get("key", ""),
+            title=data.get("title", "无标题"),
+            authors=authors,
+            year=data.get("date", ""),
+            journal=data.get("publicationTitle", ""),
+            abstract=data.get("abstractNote", ""),
+            doi=data.get("DOI", ""),
+            url=data.get("url", ""),
+            tags=[tag.get("tag", "") for tag in data.get("tags", [])],
+            pdf_path=pdf_url,
+            has_pdf=len(pdf_attachments) > 0,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/papers/{paper_id}/record", response_model=PaperRecord)
 async def get_paper_record(paper_id: str):
-    """获取特定论文的完整记录"""
+    """获取特定论文的完整记录（从Zotero）"""
+    try:
+        paper = zotero_service.get_paper_by_key(paper_id)
+        if not paper:
+            raise HTTPException(status_code=404, detail="Paper not found")
 
-    paper = get_paper_by_id(paper_id)
-    if not paper:
-        raise HTTPException(status_code=404, detail="Paper not found")
-    return paper
+        data = paper.get("data", {})
+        authors = ""
+        if "creators" in data:
+            author_names = []
+            for creator in data["creators"]:
+                if creator.get("creatorType") == "author":
+                    name_parts = []
+                    if creator.get("firstName"):
+                        name_parts.append(creator["firstName"])
+                    if creator.get("lastName"):
+                        name_parts.append(creator["lastName"])
+                    author_names.append(" ".join(name_parts))
+            authors = ", ".join(author_names)
+
+        return PaperRecord(
+            id=paper.get("key", ""),
+            title=data.get("title", "无标题"),
+            authors=authors,
+            year=data.get("date", ""),
+            journal=data.get("publicationTitle", ""),
+            abstract=data.get("abstractNote", ""),
+            doi=data.get("DOI", ""),
+            url=data.get("url", ""),
+            tags=[tag.get("tag", "") for tag in data.get("tags", [])],
+            collections=[],  # TODO: 获取集合信息
+            keywords=[],  # TODO: 从其他字段提取
+            notes=data.get("notes", ""),
+            date_added=datetime.fromisoformat("2024-01-01T00:00:00Z"),  # TODO: 真实日期
+            date_modified=datetime.fromisoformat(
+                "2024-01-01T00:00:00Z"
+            ),  # TODO: 真实日期
+            zotero_key=paper.get("key", ""),
+            zotero_version=paper.get("version", 0),
+            pdf_path=paper.get("pdf_path", ""),
+            extra={},
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/papers/search", response_model=list[PaperResponse])
 async def search_papers_endpoint(query: str | None = None):
-    """搜索论文（简化版）"""
-    if not query:
-        return get_sample_papers()
-    return search_papers(query)
+    """搜索论文（从Zotero）"""
+    try:
+        papers = zotero_service.get_papers_with_pdfs(limit=100)
 
+        if not query:
+            # 转换为PaperResponse模型
+            paper_responses = []
+            for paper in papers:
+                data = paper.get("data", {})
+                authors = ""
+                if "creators" in data:
+                    author_names = []
+                    for creator in data["creators"]:
+                        if creator.get("creatorType") == "author":
+                            name_parts = []
+                            if creator.get("firstName"):
+                                name_parts.append(creator["firstName"])
+                            if creator.get("lastName"):
+                                name_parts.append(creator["lastName"])
+                            author_names.append(" ".join(name_parts))
+                    authors = ", ".join(author_names)
 
-@router.get("/papers/search/records", response_model=list[PaperRecord])
-async def search_paper_records(query: str | None = None):
-    """搜索论文并返回完整记录"""
-    from app.data.sample_data import get_sample_records
+                # 获取PDF附件和URL
+                pdf_attachments = paper.get("pdf_attachments", [])
+                pdf_url = ""
+                if pdf_attachments:
+                    pdf_url = (
+                        zotero_service.get_pdf_file_path(pdf_attachments[0]["key"])
+                        or ""
+                    )
 
-    if not query:
-        return get_sample_records()
+                paper_responses.append(
+                    PaperResponse(
+                        id=paper.get("key", ""),
+                        title=data.get("title", "无标题"),
+                        authors=authors,
+                        year=data.get("date", ""),
+                        journal=data.get("publicationTitle", ""),
+                        abstract=data.get("abstractNote", ""),
+                        doi=data.get("DOI", ""),
+                        url=data.get("url", ""),
+                        tags=[tag.get("tag", "") for tag in data.get("tags", [])],
+                        pdf_path=pdf_url,
+                        has_pdf=len(pdf_attachments) > 0,
+                    )
+                )
+            return paper_responses
 
-    query_lower = query.lower()
-    return [
-        paper
-        for paper in get_sample_records()
-        if query_lower in paper.title.lower()
-        or any(query_lower in author.lower() for author in paper.authors)
-        or query_lower in paper.abstract.lower()
-        or any(query_lower in tag.lower() for tag in paper.tags)
-        or any(query_lower in keyword.lower() for keyword in paper.keywords)
-    ]
+        query_lower = query.lower()
+        filtered_papers = []
+        for paper in papers:
+            data = paper.get("data", {})
+            title = data.get("title", "").lower()
+            abstract = data.get("abstractNote", "").lower()
+
+            if (
+                query_lower in title
+                or query_lower in abstract
+                or any(
+                    query_lower in tag.get("tag", "").lower()
+                    for tag in data.get("tags", [])
+                )
+            ):
+                # 转换为PaperResponse模型
+                authors = ""
+                if "creators" in data:
+                    author_names = []
+                    for creator in data["creators"]:
+                        if creator.get("creatorType") == "author":
+                            name_parts = []
+                            if creator.get("firstName"):
+                                name_parts.append(creator["firstName"])
+                            if creator.get("lastName"):
+                                name_parts.append(creator["lastName"])
+                            author_names.append(" ".join(name_parts))
+                    authors = ", ".join(author_names)
+
+                # 获取PDF附件和URL
+                pdf_attachments = paper.get("pdf_attachments", [])
+                pdf_url = ""
+                if pdf_attachments:
+                    pdf_url = (
+                        zotero_service.get_pdf_file_path(pdf_attachments[0]["key"])
+                        or ""
+                    )
+
+                filtered_papers.append(
+                    PaperResponse(
+                        id=paper.get("key", ""),
+                        title=data.get("title", "无标题"),
+                        authors=authors,
+                        year=data.get("date", ""),
+                        journal=data.get("publicationTitle", ""),
+                        abstract=data.get("abstractNote", ""),
+                        doi=data.get("DOI", ""),
+                        url=data.get("url", ""),
+                        tags=[tag.get("tag", "") for tag in data.get("tags", [])],
+                        pdf_path=pdf_url,
+                        has_pdf=len(pdf_attachments) > 0,
+                    )
+                )
+
+        return filtered_papers
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/papers/{paper_id}/pdf")
 async def get_paper_pdf(paper_id: str):
     """获取论文PDF文件"""
-    from pathlib import Path
+    try:
+        # 获取论文详情
+        paper = zotero_service.get_paper_by_key(paper_id)
+        if not paper:
+            raise HTTPException(status_code=404, detail="Paper not found")
 
-    from fastapi.responses import FileResponse
+        # 获取PDF附件
+        pdfs = zotero_service.get_pdf_attachments(paper_id)
+        if not pdfs:
+            raise HTTPException(status_code=404, detail="No PDF found")
 
-    paper = get_paper_by_id(paper_id)
-    if not paper:
-        raise HTTPException(status_code=404, detail="Paper not found")
+        # 获取PDF文件的实际路径
+        pdf_url = zotero_service.get_pdf_file_path(pdfs[0]["key"])
+        if not pdf_url:
+            raise HTTPException(status_code=404, detail="PDF file not accessible")
 
-    if not paper.pdf_path:
-        raise HTTPException(status_code=404, detail="PDF file not available")
+        # 从file:// URL提取本地文件路径
+        if pdf_url.startswith("file://"):
+            pdf_file_path = pdf_url.replace("file://", "")
+        else:
+            pdf_file_path = pdf_url
 
-    pdf_path = Path(paper.pdf_path)
-    if not pdf_path.exists():
-        raise HTTPException(status_code=404, detail="PDF file not found")
+        # 检查文件是否存在
+        import os
 
-    return FileResponse(
-        pdf_path,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": "inline; filename*=utf-8''{}.pdf".format(
-                paper.title.replace(" ", "_")
-            )
-        },
-    )
+        if not os.path.exists(pdf_file_path):
+            raise HTTPException(status_code=404, detail="PDF file not found")
+
+        # 直接提供文件服务，而不是重定向
+        return FileResponse(pdf_file_path, media_type="application/pdf")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/papers/{paper_id}/markdown")
 async def get_paper_markdown(paper_id: str):
     """获取论文PDF的Markdown格式内容"""
-    from app.services.pdf_parser import pdf_parser
-
-    paper = get_paper_by_id(paper_id)
+    # 获取论文详情
+    paper = zotero_service.get_paper_by_key(paper_id)
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
 
-    if not paper.pdf_path:
-        raise HTTPException(status_code=404, detail="PDF file not available")
+    # 获取PDF附件
+    pdfs = zotero_service.get_pdf_attachments(paper_id)
+    if not pdfs:
+        raise HTTPException(status_code=404, detail="No PDF found")
 
-    pdf_path = Path(paper.pdf_path)
-    if not pdf_path.exists():
+    # 获取PDF文件的实际路径
+    pdf_url = zotero_service.get_pdf_file_path(pdfs[0]["key"])
+    if not pdf_url:
+        raise HTTPException(status_code=404, detail="PDF file not accessible")
+
+    # 从本地文件路径读取PDF
+    # 提取本地文件路径从file:// URL
+    if pdf_url.startswith("file://"):
+        pdf_file = pdf_url.replace("file://", "")
+    else:
+        pdf_file = pdf_url
+
+    pdf_file_path = Path(pdf_file)
+    if not pdf_file_path.exists():
         raise HTTPException(status_code=404, detail="PDF file not found")
 
-    try:
-        markdown = pdf_parser.parse_pdf(str(pdf_path))
-        return {"paper_id": paper_id, "markdown": markdown}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF解析失败: {str(e)}") from e
+    markdown = pdf_parser.parse_pdf(str(pdf_file_path))
+    return {"paper_id": paper_id, "markdown": markdown}
 
 
 @router.get("/health")

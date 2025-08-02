@@ -46,27 +46,22 @@ async function fetchPaper() {
 function startResize(e: MouseEvent) {
   isResizing.value = true
   document.addEventListener('mousemove', handleResize)
-  document.addEventListener('mouseup', stopResize, { capture: true })
+  document.addEventListener('mouseup', stopResize)
   document.addEventListener('mouseleave', stopResize)
   e.preventDefault()
 }
 
 function handleResize(e: MouseEvent) {
   if (!isResizing.value) return
-  const eps = 15
   const newWidth = window.innerWidth - e.clientX
-  chatWidth.value = Math.max(300, Math.min(600, newWidth))
-
-  if (newWidth < (300-eps) || newWidth > (600+eps)) {
-    stopResize()
-  }
+  chatWidth.value = Math.max(300, Math.min(800, newWidth))
 }
 
 function stopResize() {
   if (!isResizing.value) return
   isResizing.value = false
   document.removeEventListener('mousemove', handleResize)
-  document.removeEventListener('mouseup', stopResize, { capture: true })
+  document.removeEventListener('mouseup', stopResize)
   document.removeEventListener('mouseleave', stopResize)
 }
 
@@ -76,7 +71,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleResize)
-  document.removeEventListener('mouseup', stopResize, { capture: true })
+  document.removeEventListener('mouseup', stopResize)
   document.removeEventListener('mouseleave', stopResize)
 })
 </script>
@@ -88,17 +83,20 @@ onUnmounted(() => {
       <div class="flex-1 bg-white p-4 overflow-hidden">
         <div class="h-full flex flex-col">
           <h2 class="text-xl font-semibold mb-4 px-2">{{ paper.title }}</h2>
-          <div class="flex-1 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500" v-if="!pdfUrl">
-            <p class="text-lg mb-2">PDF文件不可用</p>
-            <p class="text-sm">论文ID: {{ paper.id }}</p>
+          <div class="flex-1 border border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
+            <div class="w-full h-full flex flex-col items-center justify-center text-gray-500" v-if="!pdfUrl">
+              <p class="text-lg mb-2">PDF文件不可用</p>
+              <p class="text-sm">论文ID: {{ paper.id }}</p>
+            </div>
+            <iframe
+              v-if="pdfUrl"
+              :src="pdfUrl"
+              class="w-full h-full border-none"
+              :class="{'invisible': isResizing}"
+              type="application/pdf"
+            >
+            </iframe>
           </div>
-          <iframe
-            v-if="pdfUrl"
-            :src="pdfUrl"
-            class="w-full h-full border-none rounded-lg"
-            type="application/pdf"
-          >
-          </iframe>
         </div>
       </div>
 

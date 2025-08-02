@@ -3,12 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.papers import router as papers_router
 from app.core.config import settings
+from app.services.database import ChatDatabase
 
 app = FastAPI(
     title="AIZotero",
     description="AI-powered paper reading assistant for Zotero",
     version="0.1.0",
 )
+
+# Initialize database
+chat_db = ChatDatabase()
 
 # Configure CORS
 app.add_middleware(
@@ -21,6 +25,12 @@ app.add_middleware(
 
 # Include routers
 app.include_router(papers_router, prefix="/api/v1", tags=["papers"])
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup"""
+    await chat_db.initialize()
 
 
 @app.get("/health")

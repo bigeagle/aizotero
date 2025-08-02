@@ -4,11 +4,13 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
 from app.models.paper import PaperResponse
+from app.services.database import ChatDatabase
 from app.services.pdf_parser import pdf_parser
 from app.services.zotero_service import ZoteroService
 
 router = APIRouter()
 zotero_service = ZoteroService(user_id=0)  # 本地API，user_id为0
+chat_db = ChatDatabase()
 
 
 @router.get("/papers", response_model=list[PaperResponse])
@@ -169,6 +171,27 @@ async def get_paper_markdown(paper_id: str):
 
     markdown = await pdf_parser.parse_pdf(str(pdf_file_path))
     return {"paper_id": paper_id, "markdown": markdown}
+
+
+@router.get("/papers/{paper_id}/chat")
+async def get_paper_chat(paper_id: str):
+    """获取论文的聊天记录"""
+    chat_data = await chat_db.get_chat(paper_id)
+    return {"paper_id": paper_id, "chat": chat_data}
+
+
+@router.post("/papers/{paper_id}/chat")
+async def save_paper_chat(paper_id: str, chat_data: list[dict]):
+    """保存论文的聊天记录"""
+    await chat_db.save_chat(paper_id, chat_data)
+    return {"paper_id": paper_id, "status": "saved"}
+
+
+@router.delete("/papers/{paper_id}/chat")
+async def delete_paper_chat(paper_id: str):
+    """删除论文的聊天记录"""
+    await chat_db.delete_chat(paper_id)
+    return {"paper_id": paper_id, "status": "deleted"}
 
 
 @router.get("/health")

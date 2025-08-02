@@ -304,43 +304,54 @@ function scrollToBottom() {
   });
 }
 
-// 保存对话到本地存储
-function saveConversation() {
+// 保存对话到后端数据库
+async function saveConversation() {
   if (conversation.value.length === 0) return;
 
   try {
-    const chatHistory = {
-      paper_id: props.paperId,
-      messages: conversation.value.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp.toISOString()
-      })),
-      saved_at: new Date().toISOString()
-    };
+    const chatMessages = conversation.value.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.timestamp.toISOString()
+    }));
 
-    localStorage.setItem(`aizotero-chat-${props.paperId}`, JSON.stringify(chatHistory));
-    // alert('对话已保存到本地存储');
+    const response = await fetch(`/api/v1/papers/${props.paperId}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(chatMessages),
+    });
+
+    if (!response.ok) {
+      throw new Error(`保存失败: ${response.status}`);
+    }
+
+    // console.log('对话已保存到后端');
   } catch (err) {
-    alert(`保存失败: ${err instanceof Error ? err.message : '未知错误'}`);
+    console.error('保存对话失败:', err);
   }
 }
 
-// 从本地存储加载对话
-function loadConversation() {
-  // 清空当前对话并加载保存的对话
+// 从后端数据库加载对话
+async function loadConversation() {
+  // 清空当前对话
   aiStore.clearConversation();
 
   try {
-    const saved = localStorage.getItem(`aizotero-chat-${props.paperId}`);
-    if (!saved) {
-      // alert('没有找到已保存的对话');
-      return;
+    const response = await fetch(`/api/v1/papers/${props.paperId}/chat`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        // 没有找到聊天记录，这是正常的
+        return;
+      }
+      throw new Error(`加载失败: ${response.status}`);
     }
 
-    const chatHistory = JSON.parse(saved);
+    const data = await response.json();
+    const chatMessages = data.chat || [];
 
-    for (const msg of chatHistory.messages) {
+    for (const msg of chatMessages) {
       aiStore.addMessage({
         role: msg.role as 'user' | 'assistant',
         content: msg.content,
@@ -348,9 +359,9 @@ function loadConversation() {
       });
     }
 
-    // alert(`已加载 ${chatHistory.messages.length} 条消息`);
+    // console.log(`已加载 ${chatMessages.length} 条消息`);
   } catch (err) {
-    alert(`加载失败: ${err instanceof Error ? err.message : '未知错误'}`);
+    console.error('加载对话失败:', err);
   }
 }
 

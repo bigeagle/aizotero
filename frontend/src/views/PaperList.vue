@@ -2,14 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-// Debounce utility function
-const debounce = (func: Function, delay: number) => {
-  let timeoutId: number
-  return (...args: any[]) => {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => func(...args), delay)
-  }
-}
+import { debounce } from '@/utils/debounce'
 
 interface Paper {
   id: string

@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.api.v1.arxiv import router as arxiv_router
+from app.api.v1.chat import router as chat_router
 from app.api.v1.papers import router as papers_router
 from app.core.config import settings
 from app.services.database import ChatDatabase
@@ -39,6 +40,7 @@ app.add_middleware(
 # Include routers
 app.include_router(papers_router, prefix="/api/v1", tags=["papers"])
 app.include_router(arxiv_router, prefix="/api/v1", tags=["arxiv"])
+app.include_router(chat_router, prefix="/api/v1", tags=["chat"])
 
 
 @app.get("/health")

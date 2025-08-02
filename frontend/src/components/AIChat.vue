@@ -328,8 +328,7 @@ async function saveConversation() {
       timestamp: msg.timestamp.toISOString(),
     }));
 
-    const endpoint =
-      props.source === 'arxiv' ? `/api/v1/arxiv/${props.paperId}/chat` : `/api/v1/papers/${props.paperId}/chat`;
+    const endpoint = `/api/v1/chat/${props.paperId}`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -355,8 +354,7 @@ async function loadConversation() {
   aiStore.clearConversation();
 
   try {
-    const endpoint =
-      props.source === 'arxiv' ? `/api/v1/arxiv/${props.paperId}/chat` : `/api/v1/papers/${props.paperId}/chat`;
+    const endpoint = `/api/v1/chat/${props.paperId}`;
 
     const response = await fetch(endpoint);
     if (!response.ok) {

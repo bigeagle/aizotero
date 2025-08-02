@@ -176,6 +176,9 @@ jspm_packages/
 # Next.js build output
 .next
 
+# vite cache
+.vite/
+
 # Nuxt.js build / generate output
 .nuxt
 dist

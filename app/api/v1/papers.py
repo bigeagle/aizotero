@@ -12,9 +12,9 @@ zotero_service = ZoteroService(user_id=0)  # 本地API，user_id为0
 
 
 @router.get("/papers", response_model=list[PaperResponse])
-async def get_papers(q: str | None = None, limit: int = 100):
+async def get_papers(q: str | None = None, tag: str | None = None, limit: int = 100):
     """获取论文列表（从Zotero）"""
-    papers = zotero_service.get_papers_with_pdfs(limit=limit, q=q)
+    papers = zotero_service.get_papers_with_pdfs(limit=limit, q=q, tag=tag)
 
     # 转换为PaperResponse模型
     paper_responses = []

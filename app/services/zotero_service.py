@@ -15,7 +15,9 @@ class ZoteroService:
         )
         return response.status_code == 200
 
-    def get_papers(self, limit: int = 100, q: str | None = None) -> list[dict]:
+    def get_papers(
+        self, limit: int = 100, q: str | None = None, tag: str | None = None
+    ) -> list[dict]:
         """获取论文列表，按创建时间倒序排序"""
         params = {
             "format": "json",
@@ -25,6 +27,8 @@ class ZoteroService:
         }
         if q:
             params["q"] = q
+        if tag:
+            params["tag"] = tag
         response = self.session.get(
             f"{self.base_url}/api/users/{self.user_id}/items/top",
             params=params,
@@ -80,10 +84,10 @@ class ZoteroService:
             )
 
     def get_papers_with_pdfs(
-        self, limit: int = 100, q: str | None = None
+        self, limit: int = 100, q: str | None = None, tag: str | None = None
     ) -> list[dict]:
         """获取带有PDF的论文列表"""
-        papers = self.get_papers(limit, q)
+        papers = self.get_papers(limit, q, tag)
         papers_with_pdfs = []
 
         for paper in papers:

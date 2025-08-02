@@ -50,7 +50,7 @@
     </div>
 
     <!-- 快速提示 -->
-    <div class="p-3 bg-white border-t border-gray-200 shrink-0">
+    <div class="px-3 pt-3 pb-1 bg-white border-t border-gray-200 shrink-0">
       <div class="flex flex-wrap gap-2">
         <button
           v-for="prompt in quickPrompts"
@@ -65,7 +65,7 @@
     </div>
 
     <!-- 输入区域 -->
-    <div class="p-4 bg-white border-t border-gray-200 shrink-0">
+    <div class="p-3 bg-white shrink-0">
       <div class="flex space-x-2">
         <textarea
           v-model="currentQuestion"
@@ -91,19 +91,6 @@
           <span v-if="tokenUsage > 0">已用 token: {{ tokenUsage }}</span>
         </div>
         <div class="flex space-x-2">
-          <button
-            @click="saveConversation"
-            class="text-blue-600 hover:text-blue-800"
-            :disabled="conversation.length === 0"
-          >
-            保存
-          </button>
-          <button
-            @click="loadConversation"
-            class="text-blue-600 hover:text-blue-800"
-          >
-            加载
-          </button>
           <button
             @click="clearConversation"
             class="text-blue-600 hover:text-blue-800"

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AIChat from '@/components/AIChat.vue'
 import AIConfig from '@/components/AIConfig.vue'
 
 const route = useRoute()
+const router = useRouter()
 const paperId = route.params.id as string
 
 interface Paper {
@@ -82,7 +83,15 @@ onUnmounted(() => {
       <!-- 左侧：PDF阅读器 -->
       <div class="flex-1 bg-white p-4 overflow-hidden">
         <div class="h-full flex flex-col">
-          <h2 class="text-xl font-semibold mb-4 px-2">{{ paper.title }}</h2>
+          <div class="flex items-center justify-between mb-4 px-2">
+            <h2 class="text-xl font-semibold">{{ paper.title }}</h2>
+            <button
+              @click="router.push('/')"
+              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
+            >
+              Home
+            </button>
+          </div>
           <div class="flex-1 border border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
             <div class="w-full h-full flex flex-col items-center justify-center text-gray-500" v-if="!pdfUrl">
               <p class="text-lg mb-2">PDF文件不可用</p>

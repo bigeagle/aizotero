@@ -167,7 +167,7 @@ async def get_paper_markdown(paper_id: str):
     if not pdf_file_path.exists():
         raise HTTPException(status_code=404, detail="PDF file not found")
 
-    markdown = pdf_parser.parse_pdf(str(pdf_file_path))
+    markdown = await pdf_parser.parse_pdf(str(pdf_file_path))
     return {"paper_id": paper_id, "markdown": markdown}
 
 

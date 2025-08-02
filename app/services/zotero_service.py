@@ -15,16 +15,19 @@ class ZoteroService:
         )
         return response.status_code == 200
 
-    def get_papers(self, limit: int = 100) -> list[dict]:
+    def get_papers(self, limit: int = 100, q: str | None = None) -> list[dict]:
         """获取论文列表，按创建时间倒序排序"""
+        params = {
+            "format": "json",
+            "limit": limit,
+            "sort": "dateAdded",
+            "direction": "desc",
+        }
+        if q:
+            params["q"] = q
         response = self.session.get(
             f"{self.base_url}/api/users/{self.user_id}/items/top",
-            params={
-                "format": "json",
-                "limit": limit,
-                "sort": "dateAdded",
-                "direction": "desc",
-            },
+            params=params,
         )
         response.raise_for_status()
         return response.json()
@@ -76,9 +79,11 @@ class ZoteroService:
                 detail=f"Unexpected status code: {response.status_code}",
             )
 
-    def get_papers_with_pdfs(self, limit: int = 100) -> list[dict]:
+    def get_papers_with_pdfs(
+        self, limit: int = 100, q: str | None = None
+    ) -> list[dict]:
         """获取带有PDF的论文列表"""
-        papers = self.get_papers(limit)
+        papers = self.get_papers(limit, q)
         papers_with_pdfs = []
 
         for paper in papers:

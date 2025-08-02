@@ -12,9 +12,9 @@ zotero_service = ZoteroService(user_id=0)  # 本地API，user_id为0
 
 
 @router.get("/papers", response_model=list[PaperResponse])
-async def get_papers():
+async def get_papers(q: str | None = None, limit: int = 100):
     """获取论文列表（从Zotero）"""
-    papers = zotero_service.get_papers_with_pdfs(limit=100)
+    papers = zotero_service.get_papers_with_pdfs(limit=limit, q=q)
 
     # 转换为PaperResponse模型
     paper_responses = []
@@ -98,110 +98,6 @@ async def get_paper(paper_id: str):
         pdf_path=pdf_url,
         has_pdf=len(pdf_attachments) > 0,
     )
-
-
-@router.get("/papers/search", response_model=list[PaperResponse])
-async def search_papers_endpoint(query: str | None = None):
-    """搜索论文（从Zotero）"""
-    papers = zotero_service.get_papers_with_pdfs(limit=100)
-
-    if not query:
-        # 转换为PaperResponse模型
-        paper_responses = []
-        for paper in papers:
-            data = paper.get("data", {})
-            authors = ""
-            if "creators" in data:
-                author_names = []
-                for creator in data["creators"]:
-                    if creator.get("creatorType") == "author":
-                        name_parts = []
-                        if creator.get("firstName"):
-                            name_parts.append(creator["firstName"])
-                        if creator.get("lastName"):
-                            name_parts.append(creator["lastName"])
-                        author_names.append(" ".join(name_parts))
-                authors = ", ".join(author_names)
-
-            # 获取PDF附件和URL
-            pdf_attachments = paper.get("pdf_attachments", [])
-            pdf_url = ""
-            if pdf_attachments:
-                pdf_url = (
-                    zotero_service.get_pdf_file_path(pdf_attachments[0]["key"]) or ""
-                )
-
-            paper_responses.append(
-                PaperResponse(
-                    id=paper.get("key", ""),
-                    title=data.get("title", "无标题"),
-                    authors=authors,
-                    year=data.get("date", ""),
-                    journal=data.get("publicationTitle", ""),
-                    abstract=data.get("abstractNote", ""),
-                    doi=data.get("DOI", ""),
-                    url=data.get("url", ""),
-                    tags=[tag.get("tag", "") for tag in data.get("tags", [])],
-                    pdf_path=pdf_url,
-                    has_pdf=len(pdf_attachments) > 0,
-                )
-            )
-        return paper_responses
-
-    query_lower = query.lower()
-    filtered_papers = []
-    for paper in papers:
-        data = paper.get("data", {})
-        title = data.get("title", "").lower()
-        abstract = data.get("abstractNote", "").lower()
-
-        if (
-            query_lower in title
-            or query_lower in abstract
-            or any(
-                query_lower in tag.get("tag", "").lower()
-                for tag in data.get("tags", [])
-            )
-        ):
-            # 转换为PaperResponse模型
-            authors = ""
-            if "creators" in data:
-                author_names = []
-                for creator in data["creators"]:
-                    if creator.get("creatorType") == "author":
-                        name_parts = []
-                        if creator.get("firstName"):
-                            name_parts.append(creator["firstName"])
-                        if creator.get("lastName"):
-                            name_parts.append(creator["lastName"])
-                        author_names.append(" ".join(name_parts))
-                authors = ", ".join(author_names)
-
-            # 获取PDF附件和URL
-            pdf_attachments = paper.get("pdf_attachments", [])
-            pdf_url = ""
-            if pdf_attachments:
-                pdf_url = (
-                    zotero_service.get_pdf_file_path(pdf_attachments[0]["key"]) or ""
-                )
-
-            filtered_papers.append(
-                PaperResponse(
-                    id=paper.get("key", ""),
-                    title=data.get("title", "无标题"),
-                    authors=authors,
-                    year=data.get("date", ""),
-                    journal=data.get("publicationTitle", ""),
-                    abstract=data.get("abstractNote", ""),
-                    doi=data.get("DOI", ""),
-                    url=data.get("url", ""),
-                    tags=[tag.get("tag", "") for tag in data.get("tags", [])],
-                    pdf_path=pdf_url,
-                    has_pdf=len(pdf_attachments) > 0,
-                )
-            )
-
-    return filtered_papers
 
 
 @router.get("/papers/{paper_id}/pdf")

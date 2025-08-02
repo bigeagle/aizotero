@@ -1,82 +1,115 @@
-# AI论文助手 - AIZotero
+# AI Paper Assistant - AIZotero
 
-一个基于Zotero的AI论文阅读助手，通过Web界面帮助用户快速理解和管理研究论文。
+An AI-powered paper reading assistant for Zotero with a web interface that helps users quickly understand and manage research papers.
 
-## 功能特点
+## Features
 
-- Zotero集成：直接连接本地Zotero库，无需手动导入
-- AI驱动：智能分析论文内容，提供深度见解
-- 对话式学习：边看论文边与AI讨论
-- Web界面：现代化的响应式设计
+- **Zotero Integration**: Direct connection to local Zotero library without manual import
+- **AI-Driven**: Intelligent analysis of paper content with deep insights
+- **Conversational Learning**: Discuss papers with AI while reading
+- **Web Interface**: Modern responsive design
+- **SQLite Storage**: Local storage of AI chat records with cross-session persistence
+- **Real-time Search**: Multi-dimensional search by title, abstract, tags, etc.
+- **PDF Preview**: Built-in PDF reader with draggable layout adjustment
+- **KaTeX Support**: Perfect rendering of mathematical formulas in papers
 
-## 快速开始
+## Quick Start
 
-### 环境要求
+### Requirements
+
 - Python 3.13+
 - Node.js 18+
-- Zotero（已安装并配置）
+- Zotero 7+ (installed and configured)
+- UV (Python package manager, recommended)
+- PNPM (Node.js package manager, recommended)
 
-### 安装
+### Installation
 
 ```bash
-# 克隆项目
+# Clone repository
 git clone <repository-url>
 cd aizotero
 
-# 安装后端依赖
+# Install backend dependencies with UV (recommended)
+uv sync
+
+# Or use pip
 pip install -r requirements.txt
 
-# 安装前端依赖（使用pnpm）
+# Install frontend dependencies
 cd frontend && pnpm install
 ```
 
-### 启动服务
+### Development
 
 ```bash
-# 启动后端（端口8000）
-uvicorn app.main:app --reload
+# Start backend (port 8000)
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# 启动前端（端口5173）
-cd frontend && pnpm dev
+# Start frontend (port 5173)
+pnpm dev
 ```
 
-访问 http://localhost:5173 开始使用
+Visit http://localhost:5173 to get started
 
-## 使用指南
+### Production Build
 
-1. 连接Zotero：首次使用时会自动检测本地Zotero
-2. 浏览论文：在列表页面查看所有论文
-3. 开始阅读：点击论文进入阅读界面
-4. AI对话：在右侧与AI讨论论文内容
+```bash
+# Build frontend
+cd frontend && pnpm build
 
-## 开发
+# Backend automatically serves static files from frontend/dist
+```
 
-### 项目结构
+## Usage Guide
+
+1. **Configure AI Service**: Configure OpenAI-compatible API key and service URL on first use
+2. **Connect Zotero**: Automatically detect local Zotero library
+3. **Browse Papers**: View all papers on the list page with real-time search and tag filtering
+4. **Start Reading**: Click paper to enter reading interface
+5. **AI Conversation**: Discuss paper content with AI on the right side, chat records are automatically saved
+6. **Export Conversation**: Export AI conversations as Markdown format
+
+## Technical Architecture
+
+- **Backend**: FastAPI + SQLite + aiohttp (async architecture)
+- **Frontend**: Vue 3 + TypeScript + Tailwind CSS v4
+- **Storage**: SQLite database for AI chat record storage
+- **PDF Processing**: markitdown + ThreadPoolExecutor (async conversion)
+- **AI Service**: OpenAI-compatible API + KaTeX mathematical formula rendering
+
+## Development
+
+### Project Structure
+
 ```
 aizotero/
-├── app/           # FastAPI后端
-├── frontend/      # Vue.js前端
-├── docs/          # 设计文档
-└── tests/         # 测试文件
+├── app/           # FastAPI backend
+├── frontend/      # Vue.js frontend
+├── docs/          # Design documents
+└── tests/         # Test files
 ```
 
-### 常用命令
+### Common Commands
+
 ```bash
-# 运行测试
-python -m pytest
+# Run tests
+uv run pytest -v
 
-# 代码格式化
-black .
-ruff check .
+# Code formatting
+uv run black .
+uv run ruff check . --fix
 
-# 前端检查
-cd frontend && pnpm lint
+# Frontend checks and builds
+cd frontend
+pnpm lint
+pnpm build
 ```
 
-## 贡献
+## Contributing
 
-欢迎提交Issue和Pull Request！
+Welcome to submit Issues and Pull Requests!
 
-## 许可证
+## License
 
 MIT License

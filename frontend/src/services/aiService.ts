@@ -152,7 +152,11 @@ export class AIService {
 
       // 保存对话历史
       this.conversationHistory.push(
-        { role: "user", content: question, timestamp: new Date() },
+        {
+          role: "user",
+          content: messages[messages.length - 1]?.content || "",
+          timestamp: new Date(),
+        },
         { role: "assistant", content: fullResponse, timestamp: new Date() },
       );
     } catch (error) {

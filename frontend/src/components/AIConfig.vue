@@ -155,7 +155,7 @@ async function fetchModels() {
 
     if (response.ok) {
       const data = await response.json();
-      models.value = (data.data || []).sort((a, b) => a.id.localeCompare(b.id));
+      models.value = (data.data || []).sort((a: any, b: any) => a.id.localeCompare(b.id));
     } else {
       console.error('获取模型失败:', response.status);
       models.value = [];
@@ -182,7 +182,7 @@ async function testConnection() {
 
     if (response.ok) {
       const data = await response.json();
-      models.value = (data.data || []).sort((a, b) => a.id.localeCompare(b.id));
+      models.value = (data.data || []).sort((a: any, b: any) => a.id.localeCompare(b.id));
 
       if (models.value.length > 0 && !config.value.model) {
         // 自动选择第一个可用模型

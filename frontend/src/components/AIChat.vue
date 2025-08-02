@@ -92,6 +92,19 @@
         </div>
         <div class="flex space-x-2">
           <button
+            @click="saveConversation"
+            class="text-blue-600 hover:text-blue-800"
+            :disabled="conversation.length === 0"
+          >
+            保存
+          </button>
+          <button
+            @click="loadConversation"
+            class="text-blue-600 hover:text-blue-800"
+          >
+            加载
+          </button>
+          <button
             @click="clearConversation"
             class="text-blue-600 hover:text-blue-800"
             :disabled="conversation.length === 0"
@@ -170,6 +183,8 @@ async function initializeAI() {
     aiStore.setCurrentPaper(paperContext);
     await aiService.initializeWithPaper(paperContext);
 
+    loadConversation();
+
   } catch (err) {
     aiStore.setError(err instanceof Error ? err.message : '未知错误');
   } finally {
@@ -198,7 +213,7 @@ async function sendQuestion() {
     let assistantMessageIndex = -1;
 
     await aiService.chatWithPaper(
-      question,
+      aiStore.conversation,
       (chunk) => {
         responseContent += chunk;
 
@@ -221,6 +236,8 @@ async function sendQuestion() {
       }
     );
 
+    // 自动保存
+    saveConversation();
   } catch (err) {
     aiStore.setError(err instanceof Error ? err.message : '发送消息失败');
   } finally {
@@ -299,6 +316,56 @@ function scrollToBottom() {
   });
 }
 
+// 保存对话到本地存储
+function saveConversation() {
+  if (conversation.value.length === 0) return;
+
+  try {
+    const chatHistory = {
+      paper_id: props.paperId,
+      messages: conversation.value.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp.toISOString()
+      })),
+      saved_at: new Date().toISOString()
+    };
+
+    localStorage.setItem(`aizotero-chat-${props.paperId}`, JSON.stringify(chatHistory));
+    // alert('对话已保存到本地存储');
+  } catch (err) {
+    alert(`保存失败: ${err instanceof Error ? err.message : '未知错误'}`);
+  }
+}
+
+// 从本地存储加载对话
+function loadConversation() {
+  // 清空当前对话并加载保存的对话
+  aiStore.clearConversation();
+
+  try {
+    const saved = localStorage.getItem(`aizotero-chat-${props.paperId}`);
+    if (!saved) {
+      // alert('没有找到已保存的对话');
+      return;
+    }
+
+    const chatHistory = JSON.parse(saved);
+
+    for (const msg of chatHistory.messages) {
+      aiStore.addMessage({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+        timestamp: new Date(msg.timestamp)
+      });
+    }
+
+    // alert(`已加载 ${chatHistory.messages.length} 条消息`);
+  } catch (err) {
+    alert(`加载失败: ${err instanceof Error ? err.message : '未知错误'}`);
+  }
+}
+
 // 监听对话变化
 watch(() => aiStore.conversation, scrollToBottom, { deep: true });
 
@@ -311,8 +378,11 @@ watch(
   { deep: true }
 );
 
-// 初始化
-initializeAI();
+// 自动检查是否有保存的对话
+onMounted(() => {
+  // 初始化
+  initializeAI();
+});
 </script>
 
 <style scoped>

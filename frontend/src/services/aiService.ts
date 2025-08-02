@@ -49,7 +49,7 @@ export class AIService {
   }
 
   private buildMessages(
-    question: string,
+    history: ChatMessage[],
   ): Array<{ role: string; content: string }> {
     const messages = [...this.conversationHistory];
 
@@ -62,12 +62,16 @@ export class AIService {
       });
     }
 
-    // 添加当前问题
-    messages.push({
-      role: "user",
-      content: question,
-      timestamp: new Date(),
-    });
+    for (const msg of history) {
+      // 过滤掉系统消息
+      if (msg.role !== "system") {
+        messages.push({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp,
+        });
+      }
+    }
 
     // 转换为 OpenAI 格式
     return messages.map((m) => ({
@@ -77,7 +81,7 @@ export class AIService {
   }
 
   async chatWithPaper(
-    question: string,
+    history: ChatMessage[],
     onChunk: (chunk: string) => void,
     onResponse?: () => void,
   ): Promise<void> {
@@ -86,7 +90,7 @@ export class AIService {
     }
 
     try {
-      const messages = this.buildMessages(question);
+      const messages = this.buildMessages(history);
 
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
         method: "POST",
@@ -114,6 +118,9 @@ export class AIService {
 
       let fullResponse = "";
 
+      if (!response.body) {
+        throw new Error("Response body is null");
+      }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 

@@ -1,10 +1,9 @@
-from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from app.models.paper import PaperRecord, PaperResponse
+from app.models.paper import PaperResponse
 from app.services.pdf_parser import pdf_parser
 from app.services.zotero_service import ZoteroService
 
@@ -64,61 +63,6 @@ async def get_papers():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("/papers/records", response_model=list[PaperRecord])
-async def get_paper_records():
-    """获取完整论文记录列表（从Zotero）"""
-    try:
-        papers = zotero_service.get_papers_with_pdfs(limit=100)
-
-        # 转换为PaperRecord模型
-        paper_records = []
-        for paper in papers:
-            data = paper.get("data", {})
-            authors = ""
-            if "creators" in data:
-                author_names = []
-                for creator in data["creators"]:
-                    if creator.get("creatorType") == "author":
-                        name_parts = []
-                        if creator.get("firstName"):
-                            name_parts.append(creator["firstName"])
-                        if creator.get("lastName"):
-                            name_parts.append(creator["lastName"])
-                        author_names.append(" ".join(name_parts))
-                authors = ", ".join(author_names)
-
-            paper_records.append(
-                PaperRecord(
-                    id=paper.get("key", ""),
-                    title=data.get("title", "无标题"),
-                    authors=authors,
-                    year=data.get("date", ""),
-                    journal=data.get("publicationTitle", ""),
-                    abstract=data.get("abstractNote", ""),
-                    doi=data.get("DOI", ""),
-                    url=data.get("url", ""),
-                    tags=[tag.get("tag", "") for tag in data.get("tags", [])],
-                    collections=[],  # TODO: 获取集合信息
-                    keywords=[],  # TODO: 从其他字段提取
-                    notes=data.get("notes", ""),
-                    date_added=datetime.fromisoformat(
-                        "2024-01-01T00:00:00Z"
-                    ),  # TODO: 真实日期
-                    date_modified=datetime.fromisoformat(
-                        "2024-01-01T00:00:00Z"
-                    ),  # TODO: 真实日期
-                    zotero_key=paper.get("key", ""),
-                    zotero_version=paper.get("version", 0),
-                    pdf_path=paper.get("pdf_path", ""),
-                    extra={},
-                )
-            )
-
-        return paper_records
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
-
-
 @router.get("/papers/{paper_id}", response_model=PaperResponse)
 async def get_paper(paper_id: str):
     """获取特定论文（从Zotero）"""
@@ -159,54 +103,6 @@ async def get_paper(paper_id: str):
             tags=[tag.get("tag", "") for tag in data.get("tags", [])],
             pdf_path=pdf_url,
             has_pdf=len(pdf_attachments) > 0,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
-
-
-@router.get("/papers/{paper_id}/record", response_model=PaperRecord)
-async def get_paper_record(paper_id: str):
-    """获取特定论文的完整记录（从Zotero）"""
-    try:
-        paper = zotero_service.get_paper_by_key(paper_id)
-        if not paper:
-            raise HTTPException(status_code=404, detail="Paper not found")
-
-        data = paper.get("data", {})
-        authors = ""
-        if "creators" in data:
-            author_names = []
-            for creator in data["creators"]:
-                if creator.get("creatorType") == "author":
-                    name_parts = []
-                    if creator.get("firstName"):
-                        name_parts.append(creator["firstName"])
-                    if creator.get("lastName"):
-                        name_parts.append(creator["lastName"])
-                    author_names.append(" ".join(name_parts))
-            authors = ", ".join(author_names)
-
-        return PaperRecord(
-            id=paper.get("key", ""),
-            title=data.get("title", "无标题"),
-            authors=authors,
-            year=data.get("date", ""),
-            journal=data.get("publicationTitle", ""),
-            abstract=data.get("abstractNote", ""),
-            doi=data.get("DOI", ""),
-            url=data.get("url", ""),
-            tags=[tag.get("tag", "") for tag in data.get("tags", [])],
-            collections=[],  # TODO: 获取集合信息
-            keywords=[],  # TODO: 从其他字段提取
-            notes=data.get("notes", ""),
-            date_added=datetime.fromisoformat("2024-01-01T00:00:00Z"),  # TODO: 真实日期
-            date_modified=datetime.fromisoformat(
-                "2024-01-01T00:00:00Z"
-            ),  # TODO: 真实日期
-            zotero_key=paper.get("key", ""),
-            zotero_version=paper.get("version", 0),
-            pdf_path=paper.get("pdf_path", ""),
-            extra={},
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

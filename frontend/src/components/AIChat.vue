@@ -134,6 +134,7 @@ import { useAIStore } from '@/stores/aiStore';
 import { AIService } from '@/services/aiService';
 import { marked } from 'marked';
 import markedKatex from 'marked-katex-extension';
+import 'katex/dist/katex.css';
 
 interface Props {
   paperId: string;

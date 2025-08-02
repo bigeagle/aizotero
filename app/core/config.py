@@ -30,5 +30,10 @@ class Settings(BaseSettings):
         default=Path("data"), description="Directory for storing application data files"
     )
 
+    # Static files directory
+    STATIC_DIR: Path = Field(
+        default=Path("frontend/dist"), description="Directory for static frontend files"
+    )
+
 
 settings = Settings()

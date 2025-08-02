@@ -1,4 +1,5 @@
 import requests
+from fastapi import HTTPException
 
 
 class ZoteroService:
@@ -9,89 +10,71 @@ class ZoteroService:
 
     def test_connection(self) -> bool:
         """测试Zotero本地API连接"""
-        try:
-            response = self.session.get(
-                f"{self.base_url}/api/users/{self.user_id}/items/top", timeout=5
-            )
-            return response.status_code == 200
-        except Exception:
-            return False
+        response = self.session.get(
+            f"{self.base_url}/api/users/{self.user_id}/items/top", timeout=5
+        )
+        return response.status_code == 200
 
     def get_papers(self, limit: int = 100) -> list[dict]:
         """获取论文列表，按创建时间倒序排序"""
-        try:
-            response = self.session.get(
-                f"{self.base_url}/api/users/{self.user_id}/items/top",
-                params={
-                    "format": "json",
-                    "limit": limit,
-                    "sort": "dateAdded",
-                    "direction": "desc",
-                },
-            )
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            print(f"Error fetching papers: {e}")
-            return []
+        response = self.session.get(
+            f"{self.base_url}/api/users/{self.user_id}/items/top",
+            params={
+                "format": "json",
+                "limit": limit,
+                "sort": "dateAdded",
+                "direction": "desc",
+            },
+        )
+        response.raise_for_status()
+        return response.json()
 
-    def get_paper_by_key(self, key: str) -> dict | None:
+    def get_paper_by_key(self, key: str) -> dict:
         """根据key获取单篇论文详情"""
-        try:
-            response = self.session.get(
-                f"{self.base_url}/api/users/{self.user_id}/items/{key}"
-            )
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            print(f"Error fetching paper {key}: {e}")
-            return None
+        response = self.session.get(
+            f"{self.base_url}/api/users/{self.user_id}/items/{key}"
+        )
+        response.raise_for_status()
+        return response.json()
 
     def get_pdf_attachments(self, item_key: str) -> list[dict]:
         """获取论文的PDF附件"""
-        try:
-            # 获取该论文的子项（attachments）
-            response = self.session.get(
-                f"{self.base_url}/api/users/{self.user_id}/items/{item_key}/children"
-            )
-            response.raise_for_status()
-            children = response.json()
+        # 获取该论文的子项（attachments）
+        response = self.session.get(
+            f"{self.base_url}/api/users/{self.user_id}/items/{item_key}/children"
+        )
+        response.raise_for_status()
+        children = response.json()
 
-            # 过滤出PDF附件
-            pdf_attachments = []
-            for child in children:
-                if (
-                    child.get("data", {}).get("itemType") == "attachment"
-                    and child.get("data", {}).get("contentType") == "application/pdf"
-                ):
-                    pdf_attachments.append(child)
+        # 过滤出PDF附件
+        pdf_attachments = []
+        for child in children:
+            if (
+                child.get("data", {}).get("itemType") == "attachment"
+                and child.get("data", {}).get("contentType") == "application/pdf"
+            ):
+                pdf_attachments.append(child)
 
-            return pdf_attachments
-        except Exception as e:
-            print(f"Error fetching PDF attachments for {item_key}: {e}")
-            return []
+        return pdf_attachments
 
     def get_pdf_file_path(self, attachment_key: str) -> str | None:
         """获取PDF文件的实际路径（通过302重定向）"""
-        try:
-            response = self.session.get(
-                f"{self.base_url}/api/users/{self.user_id}/items/{attachment_key}/file",
-                allow_redirects=False,  # 不要自动跟随重定向
-            )
+        response = self.session.get(
+            f"{self.base_url}/api/users/{self.user_id}/items/{attachment_key}/file",
+            allow_redirects=False,  # 不要自动跟随重定向
+        )
 
-            if response.status_code == 302:
-                redirect_url = response.headers.get("Location")
-                return redirect_url
-            elif response.status_code == 200:
-                # 直接返回文件内容，这种情况通常不会发生
-                return None
-            else:
-                print(f"Unexpected status code: {response.status_code}")
-                return None
-
-        except Exception as e:
-            print(f"Error fetching PDF path for {attachment_key}: {e}")
+        if response.status_code == 302:
+            redirect_url = response.headers.get("Location")
+            return redirect_url
+        elif response.status_code == 200:
+            # 直接返回文件内容，这种情况通常不会发生
             return None
+        else:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Unexpected status code: {response.status_code}",
+            )
 
     def get_papers_with_pdfs(self, limit: int = 100) -> list[dict]:
         """获取带有PDF的论文列表"""

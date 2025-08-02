@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
-from typing import List, Dict, Any
+from typing import Any
+
+from fastapi import APIRouter
 
 from app.services.database import ChatDatabase
 
@@ -15,7 +16,7 @@ async def get_paper_chat(paper_id: str):
 
 
 @router.post("/{paper_id}")
-async def save_paper_chat(paper_id: str, chat_data: List[Dict[str, Any]]):
+async def save_paper_chat(paper_id: str, chat_data: list[dict[str, Any]]):
     """保存论文的聊天记录"""
     await chat_db.save_chat(paper_id, chat_data)
     return {"paper_id": paper_id, "status": "saved"}

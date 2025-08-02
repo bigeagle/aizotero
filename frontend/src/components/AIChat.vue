@@ -178,8 +178,6 @@ async function initializeAI() {
     const paperContext = {
       paperId: props.paperId,
       markdown: data.markdown,
-      title: '',
-      authors: [],
     };
 
     aiStore.setCurrentPaper(paperContext);

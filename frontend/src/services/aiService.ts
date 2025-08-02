@@ -20,8 +20,6 @@ export interface ChatMessage {
 export interface PaperContext {
   paperId: string;
   markdown: string;
-  title: string;
-  authors: string[];
 }
 
 export class AIService {

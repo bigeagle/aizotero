@@ -228,3 +228,7 @@ zotero/
 
 # Data directory for file storage
 data/
+
+# Crush directory
+.crush/
+.claude/

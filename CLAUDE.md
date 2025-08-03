@@ -64,6 +64,10 @@ pnpm build
 - `frontend/src/assets/main.css` - Tailwind CSS imports and custom styles
 - `app/services/pdf_parser.py` - PDF to Markdown conversion service (async with thread pool)
 - `app/services/zotero_service.py` - Zotero API service (async with aiohttp)
+- `app/services/arxiv_service.py` - ArXiv paper fetching service (async)
+- `app/api/v1/arxiv.py` - ArXiv API endpoints
+- `app/api/v1/chat.py` - AI chat API endpoints
+- `app/models/arxiv.py` - ArXiv data models
 - `lefthook.yml` - Git hooks for code quality (replaced pre-commit)
 - `frontend/src/components/AIChat.vue` - AI chat interface component
 - `frontend/src/components/AIConfig.vue` - AI configuration management component
@@ -82,7 +86,9 @@ aizotero/
 │   │   ├── __init__.py
 │   │   └── v1/          # API version 1
 │   │       ├── __init__.py
-│   │       └── papers.py
+│   │       ├── papers.py      # Zotero papers API
+│   │       ├── arxiv.py       # ArXiv integration API
+│   │       └── chat.py        # AI chat API
 │   ├── core/            # Configuration
 │   │   ├── __init__.py
 │   │   └── config.py    # Pydantic settings
@@ -92,11 +98,13 @@ aizotero/
 │   │   └── sample_data.py
 │   ├── models/          # Pydantic models
 │   │   ├── __init__.py
-│   │   └── paper.py     # Paper data models
+│   │   ├── paper.py     # Paper data models
+│   │   └── arxiv.py     # ArXiv data models
 │   ├── services/        # Business logic
 │   │   ├── __init__.py
-│   │   ├── pdf_parser.py # PDF to Markdown service
-│   │   └── zotero_service.py # Zotero API service
+│   │   ├── pdf_parser.py      # PDF to Markdown service
+│   │   ├── zotero_service.py  # Zotero API service
+│   │   └── arxiv_service.py   # ArXiv paper fetching service
 │   └── tests/           # Backend tests
 │       ├── __init__.py
 │       └── test_main.py
@@ -132,12 +140,15 @@ aizotero/
 │   └── cache/             # Application cache
 ├── docs/                  # Design documents
 │   ├── 0001-design.md     # Project requirements
-│   └── 0002-frontend-ai-design.md # Frontend AI integration design
+│   ├── 0002-frontend-ai-design.md # Frontend AI integration design
+│   ├── 0003-zotero-connector-api.md # Zotero Connector API docs
+│   └── 0004-save-arxiv-to-zotero-design.md # ArXiv integration design
 ├── .env.example          # Environment template
 ├── .gitignore            # Git ignore rules
 ├── pyproject.toml        # Python project configuration
 ├── uv.lock               # UV dependency lock
 ├── README.md             # Project documentation
+├── lefthook.yml          # Git hooks configuration
 └── CLAUDE.md             # Claude Code guidance
 ```
 
@@ -185,4 +196,4 @@ cd frontend && pnpm format
 
 ### Coding Style
 1. DO NOT write overly broad `try ... except` blocks that catch all exceptions.
-
+2. Prefer async/await over callbacks, use aiohttp for HTTP

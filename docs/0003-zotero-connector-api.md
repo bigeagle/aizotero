@@ -200,8 +200,10 @@ class ZoteroConnector {
         abstractNote: metadata.abstract,
         url: `https://arxiv.org/abs/${arxivId}`,
         date: metadata.date,
-        archive: 'arXiv',
-        extra: `arXiv: ${arxivId}`
+        publisher: 'arXiv',
+        number: `arXiv:${arxivId}`,
+        archiveID: `arXiv:${arxivId}`,
+        DOI: `10.48550/arXiv.${arxivId}`
       }],
       sessionID: `aizotero-${Date.now()}`
     };
@@ -291,8 +293,10 @@ class ZoteroConnector:
                 "abstractNote": abstract,
                 "url": f"https://arxiv.org/abs/{arxiv_id}",
                 "date": date,
-                "archive": "arXiv",
-                "extra": f"arXiv: {arxiv_id}"
+                "publisher": "arXiv",
+                "number": f"arXiv:{arxiv_id}",
+                "archiveID": f"arXiv:{arxiv_id}",
+                "DOI": "10.48550/arXiv." + arxiv_id,
             }],
             "sessionID": f"aizotero-{hash(arxiv_id) % 10000}"
         }

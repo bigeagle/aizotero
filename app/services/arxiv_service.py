@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class ArxivService:
+
     def __init__(self):
         self.base_url = "https://arxiv.org"
         self.pdf_cache_dir = settings.DATA_DIR / "cache" / "arxiv" / "pdf"
@@ -28,7 +29,7 @@ class ArxivService:
 
     async def get_arxiv_paper(self, arxiv_id: str) -> ArxivPaper:
         """获取arXiv论文完整数据"""
-        metadata = await self._get_metadata(arxiv_id)
+        metadata = await self.get_arxiv_metadata(arxiv_id)
         if not metadata:
             raise ValueError(f"无法获取论文 {arxiv_id} 的元数据")
 
@@ -49,7 +50,7 @@ class ArxivService:
         # 使用pdf_parser的缓存机制转换为markdown
         return await self._get_markdown(pdf_path)
 
-    async def _get_metadata(self, arxiv_id: str) -> ArxivMetadata | None:
+    async def get_arxiv_metadata(self, arxiv_id: str) -> ArxivMetadata | None:
         """获取论文元数据，带缓存"""
         cache_file = self.metadata_cache_dir / f"{arxiv_id}.json"
 

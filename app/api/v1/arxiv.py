@@ -4,9 +4,15 @@ from fastapi import APIRouter
 
 from app.models.arxiv import ArxivPaper
 from app.services.arxiv_service import ArxivService
+from app.services.zotero_connector import ZoteroConnectorService
+from app.services.zotero_service import ZoteroService
 
 router = APIRouter(prefix="/arxiv", tags=["arxiv"])
 arxiv_service = ArxivService()
+zotero_service = ZoteroService(user_id=0)
+zotero_connector = ZoteroConnectorService(
+    zotero_service=zotero_service, arxiv_service=arxiv_service
+)
 
 
 @router.get("/{arxiv_id}", response_model=ArxivPaper)
@@ -42,3 +48,14 @@ async def clear_cache(arxiv_id: str) -> str:
     """清除特定论文的缓存"""
     arxiv_service.clear_cache(arxiv_id)
     return "缓存已清除"
+
+
+@router.post("/{arxiv_id}/save-to-zotero")
+async def save_arxiv_to_zotero(
+    arxiv_id: str, include_pdf: bool = True
+) -> dict[str, str]:
+    """将arXiv论文保存到Zotero"""
+    item_id = await zotero_connector.save_arxiv_paper_to_zotero(
+        arxiv_id, include_pdf=include_pdf
+    )
+    return {"item_id": item_id, "status": "success"}

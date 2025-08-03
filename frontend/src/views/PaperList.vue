@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 
 import { debounce } from '@/utils/debounce';
 import { zoteroService, type ZoteroPaper } from '@/services/zoteroService';
-import ArxivInput from '@/components/ArxivInput.vue';
 
 const papers = ref<ZoteroPaper[]>([]);
 const loading = ref(true);
@@ -66,11 +65,6 @@ function openPaper(id: string) {
   <div class="max-w-6xl mx-auto">
     <div class="flex items-center gap-4 mb-4 flex-wrap">
       <h1 class="text-3xl font-bold text-gray-900">论文列表</h1>
-
-      <!-- arXiv 输入组件 -->
-      <div class="w-full mt-4">
-        <ArxivInput />
-      </div>
 
       <!-- 标签过滤器 -->
       <div class="flex gap-2">

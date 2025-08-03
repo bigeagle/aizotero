@@ -38,11 +38,16 @@
 
     <!-- 论文预览 -->
     <div v-if="paper" class="p-4 border border-gray-200 rounded-md">
-      <h3 class="text-lg font-semibold mb-2">{{ paper.title }}</h3>
-      <p class="text-sm text-gray-600 mb-2">作者: {{ paper.authors }}</p>
-      <button @click="openReader" class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
-        开始阅读
-      </button>
+      <div class="flex items-start justify-between mb-3">
+        <h3 class="text-lg font-semibold flex-1 mr-4">{{ paper.title }}</h3>
+        <button
+          @click="openReader"
+          class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 whitespace-nowrap"
+        >
+          开始阅读
+        </button>
+      </div>
+      <p class="text-sm text-gray-600">作者: {{ paper.authors }}</p>
     </div>
   </div>
 </template>
@@ -60,6 +65,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
   (e: 'loaded', paper: ArxivPaper): void;
+  (e: 'read', paper: ArxivPaper): void;
 }>();
 
 const router = useRouter();
@@ -140,6 +146,29 @@ const loadArxivPaper = async () => {
 const openReader = () => {
   if (paper.value) {
     router.push(`/read/arxiv/${paper.value.id}`);
+    // 通知父组件关闭popup
+    emit('read', paper.value);
   }
 };
+
+// 暴露给父组件的方法
+const focusInput = () => {
+  const inputEl = document.querySelector('input[type="text"]') as HTMLInputElement;
+  if (inputEl) {
+    inputEl.focus();
+  }
+};
+
+const clearInput = () => {
+  inputText.value = '';
+  paper.value = null;
+  cacheInfo.value = null;
+  error.value = '';
+};
+
+// 将方法暴露给父组件
+defineExpose({
+  focusInput,
+  clearInput,
+});
 </script>

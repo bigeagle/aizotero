@@ -32,6 +32,9 @@ const chatWidth = ref(600);
 const isResizing = ref(false);
 const showAIConfig = ref(false);
 const loading = ref(true);
+const saveStatus = ref<'idle' | 'saving' | 'success' | 'error'>('idle');
+const saveError = ref('');
+const isArxiv = computed(() => props.source === 'arxiv');
 
 const pdfUrl = computed(() => {
   if (!paper.value?.pdf_path) return null;
@@ -103,6 +106,30 @@ onMounted(() => {
   fetchPaper();
 });
 
+async function handleSaveToZotero() {
+  if (!isArxiv.value || !paper.value) return;
+
+  saveStatus.value = 'saving';
+  saveError.value = '';
+
+  try {
+    const response = await zoteroService.saveToZotero(paperId, true);
+    saveStatus.value = 'success';
+
+    // 路由到Zotero文章阅读页面
+    router.push(`/read/zotero/${response.item_id}`);
+
+    // 3秒后重置状态
+    setTimeout(() => {
+      saveStatus.value = 'idle';
+    }, 3000);
+  } catch (error) {
+    saveStatus.value = 'error';
+    saveError.value = error instanceof Error ? error.message : '保存失败';
+    console.error('Failed to save to Zotero:', error);
+  }
+}
+
 onUnmounted(() => {
   document.removeEventListener('mousemove', handleResize);
   document.removeEventListener('mouseup', stopResize);
@@ -123,18 +150,61 @@ onUnmounted(() => {
               </span>
               <h2 class="text-xl font-semibold">{{ paper.title }}</h2>
             </div>
-            <button
-              @click="router.push('/')"
-              class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
-            >
-              Home
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                v-if="isArxiv"
+                @click="handleSaveToZotero"
+                :disabled="saveStatus === 'saving'"
+                class="px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
+                :class="{
+                  'bg-green-500 text-white hover:bg-green-600': saveStatus === 'idle',
+                  'bg-yellow-500 text-white cursor-not-allowed': saveStatus === 'saving',
+                  'bg-green-600 text-white': saveStatus === 'success',
+                  'bg-red-500 text-white': saveStatus === 'error',
+                }"
+              >
+                <span v-if="saveStatus === 'idle'">💾 保存到Zotero</span>
+                <span v-else-if="saveStatus === 'saving'">⏳ 保存中...</span>
+                <span v-else-if="saveStatus === 'success'">✅ 已保存</span>
+                <span v-else-if="saveStatus === 'error'">❌ 失败</span>
+              </button>
+              <button
+                @click="router.push('/')"
+                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
+              >
+                Home
+              </button>
+            </div>
           </div>
           <div class="flex-1 border border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
             <div class="w-full h-full flex flex-col items-center justify-center text-gray-500" v-if="!pdfUrl">
               <p class="text-lg mb-2">PDF文件不可用</p>
               <p class="text-sm">论文ID: {{ paper.id }}</p>
             </div>
+
+            <!-- 错误提示 -->
+            <div
+              v-if="saveError && saveStatus === 'error'"
+              class="absolute top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-10 max-w-sm"
+            >
+              <div class="flex items-center">
+                <span class="mr-2">⚠️</span>
+                <div>
+                  <p class="font-bold">保存失败</p>
+                  <p class="text-sm">{{ saveError }}</p>
+                </div>
+                <button
+                  @click="
+                    saveStatus = 'idle';
+                    saveError = '';
+                  "
+                  class="ml-2 text-red-700 hover:text-red-900 text-lg"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
             <iframe
               v-if="pdfUrl"
               :src="pdfUrl"

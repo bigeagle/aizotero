@@ -214,7 +214,10 @@ class ZoteroConnectorService:
         async with self.get_session() as session:
             async with session.post(
                 "/connector/saveAttachment",
-                headers={"X-Metadata": json.dumps(metadata, ensure_ascii=False)},
+                headers={
+                    "X-Metadata": json.dumps(metadata, ensure_ascii=False),
+                    "Content-Type": "application/pdf",
+                },
                 data=pdf_content,
             ) as response:
                 if response.status == 201:

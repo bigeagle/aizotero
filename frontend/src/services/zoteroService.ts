@@ -12,6 +12,11 @@ export interface ZoteroPaper {
   has_pdf: boolean;
 }
 
+export interface SaveToZoteroResponse {
+  item_id: string;
+  status: string;
+}
+
 export const zoteroService = {
   async getPaper(paperId: string): Promise<ZoteroPaper> {
     const response = await fetch(`/api/v1/papers/${paperId}`);
@@ -46,6 +51,23 @@ export const zoteroService = {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
+    return response.json();
+  },
+
+  async saveToZotero(arxivId: string, includePdf: boolean = true): Promise<SaveToZoteroResponse> {
+    const response = await fetch(`/api/v1/arxiv/${arxivId}/save-to-zotero`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ include_pdf: includePdf }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || `HTTP ${response.status}`);
+    }
+
     return response.json();
   },
 };

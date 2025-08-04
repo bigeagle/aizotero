@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
 
 import { debounce } from '@/utils/debounce';
 import { zoteroService, type ZoteroPaper } from '@/services/zoteroService';
@@ -9,7 +8,6 @@ const papers = ref<ZoteroPaper[]>([]);
 const loading = ref(true);
 const searchQuery = ref('');
 const activeTag = ref<string | null>(null);
-const router = useRouter();
 
 const fetchPapers = async (query?: string, tag?: string | null) => {
   loading.value = true;
@@ -55,12 +53,7 @@ function filterByTag(tag: string | null) {
   activeTag.value = tag;
   fetchPapers(searchQuery.value, tag);
 }
-
-function openPaper(id: string) {
-  router.push(`/read/zotero/${id}`);
-}
 </script>
-
 <template>
   <div class="max-w-6xl mx-auto">
     <div class="flex items-center gap-4 mb-4 flex-wrap">
@@ -130,12 +123,12 @@ function openPaper(id: string) {
 
     <div v-else class="grid gap-6">
       <div v-for="paper in papers" :key="paper.id" class="card hover:shadow-lg transition-shadow duration-300">
-        <h3
-          class="text-xl font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors duration-200"
-          @click="openPaper(paper.id)"
+        <router-link
+          :to="`/read/zotero/${paper.id}`"
+          class="text-xl font-semibold text-gray-900 mb-2 block hover:text-blue-600 transition-colors duration-200"
         >
           {{ paper.title }}
-        </h3>
+        </router-link>
         <p class="text-gray-700 mb-2">{{ paper.authors }}</p>
         <p class="text-sm text-gray-500 mb-3">
           <span v-if="paper.year">{{ paper.year }}</span>

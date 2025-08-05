@@ -123,7 +123,7 @@ import { AIService } from '@/services/aiService';
 import { zoteroService } from '@/services/zoteroService';
 import { arxivService } from '@/services/arxivService';
 import { marked } from 'marked';
-import markedKatex from 'marked-katex-extension';
+import markedKatex from '@/utils/marked-katex-custom';
 import 'katex/dist/katex.css';
 
 interface Props {
@@ -295,11 +295,12 @@ function formatTime(timestamp: Date) {
 function renderMarkdown(content: string): string {
   if (!content.trim()) return '';
 
-  // 使用 marked-katex-extension
+  // 使用自定义的 marked-katex-custom 并启用 relaxed 模式
   const markedWithKatex = marked.use(
     markedKatex({
       throwOnError: false,
       displayMode: false,
+      nonStandard: true, // 启用 relaxed 模式
     })
   );
 

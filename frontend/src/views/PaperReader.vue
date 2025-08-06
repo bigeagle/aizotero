@@ -23,6 +23,7 @@ interface Paper {
   journal?: string;
   abstract?: string;
   pdf_path?: string;
+  url?: string;
 }
 
 const paperId = route.params.id as string;
@@ -67,6 +68,7 @@ async function fetchPaper() {
       journal: paperData.journal,
       abstract: paperData.abstract,
       pdf_path: paperData.pdf_path,
+      url: paperData.url,
     };
   } catch (error) {
     console.error('Failed to fetch paper:', error);
@@ -151,6 +153,14 @@ onUnmounted(() => {
               <h2 class="text-xl font-semibold">{{ paper.title }}</h2>
             </div>
             <div class="flex items-center gap-2">
+              <a
+                v-if="paper.url"
+                :href="paper.url"
+                target="_blank"
+                class="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-purple-600 transition-colors duration-200 flex items-center gap-2"
+              >
+                🔗 原文
+              </a>
               <button
                 v-if="isArxiv"
                 @click="handleSaveToZotero"

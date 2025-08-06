@@ -394,9 +394,12 @@ watch(
 );
 
 // paperId 变化时重新初始化 AI
-watch(() => props.paperId, async () => {
-  await initializeAI();
-})
+watch(
+  () => props.paperId,
+  async () => {
+    await initializeAI();
+  }
+);
 
 // 自动检查是否有保存的对话
 onMounted(() => {

@@ -50,6 +50,37 @@ async def clear_cache(arxiv_id: str) -> str:
     return "缓存已清除"
 
 
+@router.get("/{arxiv_id}/check-existence")
+async def check_arxiv_existence(arxiv_id: str) -> dict[str, Any]:
+    """检查arXiv论文是否已存在于Zotero库中"""
+    try:
+        # 获取arXiv论文元数据
+        paper = await arxiv_service.get_arxiv_paper(arxiv_id)
+        if not paper:
+            return {"exists": False, "message": "arXiv论文未找到"}
+
+        # 检查是否已存在
+        existing_item_id = await zotero_connector.find_saved_arxiv_paper(
+            arxiv_id, paper.title
+        )
+
+        if existing_item_id:
+            return {
+                "exists": True,
+                "item_id": existing_item_id,
+                "title": paper.title,
+                "message": "论文已存在于Zotero库中",
+            }
+        else:
+            return {
+                "exists": False,
+                "title": paper.title,
+                "message": "论文未存在于Zotero库中",
+            }
+    except Exception as e:
+        return {"exists": False, "error": str(e), "message": "检查失败"}
+
+
 @router.post("/{arxiv_id}/save-to-zotero")
 async def save_arxiv_to_zotero(
     arxiv_id: str, include_pdf: bool = True

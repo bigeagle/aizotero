@@ -47,7 +47,7 @@ pnpm build
 
 ## Key Commands
 
-- `uv run pytest` - Run tests
+- `uv run -m pytest` - Run tests
 - `uv run black .` - Format Python code
 - `uv run ruff check .` - Lint Python code
 - `uv run lefthook run pre-commit` - Run all git hooks

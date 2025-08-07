@@ -19,6 +19,14 @@ export interface CacheInfo {
   cache_age_hours: number;
 }
 
+export interface DuplicateCheckResult {
+  exists: boolean;
+  item_id?: string;
+  title?: string;
+  message?: string;
+  error?: string;
+}
+
 export const arxivService = {
   async getPaper(arxivId: string): Promise<ArxivPaper> {
     const response = await fetch(`/api/v1/arxiv/${arxivId}`);
@@ -59,5 +67,13 @@ export const arxivService = {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
+  },
+
+  async checkExistenceInZotero(arxivId: string): Promise<DuplicateCheckResult> {
+    const response = await fetch(`/api/v1/arxiv/${arxivId}/check-existence`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
   },
 };

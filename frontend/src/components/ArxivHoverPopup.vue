@@ -57,6 +57,7 @@
             @loaded="handlePaperLoaded"
             @update:modelValue="handleInputChange"
             @read="closePopup"
+            @duplicate-check="handleDuplicateCheck"
           />
         </div>
       </div>
@@ -67,6 +68,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import ArxivInput from './ArxivInput.vue';
+import type { DuplicateCheckResult } from '../services/arxivService';
 
 const isVisible = ref(false);
 
@@ -84,6 +86,11 @@ const handlePaperLoaded = () => {
 
 const handleInputChange = () => {
   // 可以在这里添加额外的输入处理逻辑
+};
+
+const handleDuplicateCheck = (result: DuplicateCheckResult) => {
+  // 可以在这里添加额外的重复检查处理逻辑
+  console.log('重复检查结果:', result);
 };
 
 // 点击外部区域关闭指令

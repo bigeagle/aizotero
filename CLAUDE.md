@@ -14,6 +14,7 @@ AI-powered paper reading assistant for Zotero with web interface. Helps users qu
 - **AI Integration**: OpenAI compatible API support
 - **PDF Processing**: markitdown with ThreadPoolExecutor (async)
 - **Styling**: Tailwind CSS v4 with @tailwindcss/typography plugin
+- **Storage**: SQLite for chat history, file-based caching for PDF processing
 
 ## Development Setup
 
@@ -47,153 +48,133 @@ pnpm build
 
 ## Key Commands
 
-- `uv run -m pytest` - Run tests
+### Backend
+- `uv run -m pytest` - Run all tests
+- `uv run -m pytest app/tests/test_main.py::test_specific_function` - Run single test
 - `uv run black .` - Format Python code
 - `uv run ruff check .` - Lint Python code
+- `uv run ruff check . --fix` - Auto-fix linting issues
 - `uv run lefthook run pre-commit` - Run all git hooks
-- `pnpm lint` - Lint frontend code
+
+### Frontend
 - `pnpm dev` - Start frontend dev server
 - `pnpm build` - Build frontend for production
+- `pnpm lint` - Lint frontend code
 - `pnpm type-check` - TypeScript type checking
 - `pnpm format` - Format frontend code with Prettier
+- `pnpm preview` - Preview production build locally
 
-## Key Files Added
+## Core Architecture Patterns
 
-- `frontend/tailwind.config.js` - Tailwind CSS configuration (v4)
-- `frontend/postcss.config.js` - PostCSS configuration for Tailwind
-- `frontend/src/assets/main.css` - Tailwind CSS imports and custom styles
-- `app/services/pdf_parser.py` - PDF to Markdown conversion service (async with thread pool)
-- `app/services/zotero_service.py` - Zotero API service (async with aiohttp)
-- `app/services/arxiv_service.py` - ArXiv paper fetching service (async)
-- `app/api/v1/arxiv.py` - ArXiv API endpoints
-- `app/api/v1/chat.py` - AI chat API endpoints
-- `app/models/arxiv.py` - ArXiv data models
-- `lefthook.yml` - Git hooks for code quality (replaced pre-commit)
-- `frontend/src/components/AIChat.vue` - AI chat interface component
-- `frontend/src/components/AIConfig.vue` - AI configuration management component
-- `frontend/src/services/aiService.ts` - AI service integration
-- `frontend/src/stores/aiStore.ts` - Pinia store for AI state management
-- `app/data/` - Sample data and utilities
+### Async Design Patterns
+- **ThreadPoolExecutor for sync operations**: PDF processing uses ThreadPoolExecutor to avoid blocking async event loop
+- **aiohttp for all external HTTP calls**: All Zotero API calls use aiohttp with proper session management
+- **Database operations**: SQLite operations use aiosqlite for async support
 
-## Project Structure
+### Service Layer Architecture
+- **ZoteroService** (`app/services/zotero_service.py`): Handles all Zotero API interactions with async session management
+- **PDFParserService** (`app/services/pdf_parser.py`): Async PDF processing with file-based caching using MD5 hashes
+- **ChatDatabase** (`app/services/database.py`): SQLite-based chat history persistence with JSON storage
 
-```
-aizotero/
-├── app/                 # FastAPI backend
-│   ├── __init__.py
-│   ├── main.py          # FastAPI application entry
-│   ├── api/             # API routes
-│   │   ├── __init__.py
-│   │   └── v1/          # API version 1
-│   │       ├── __init__.py
-│   │       ├── papers.py      # Zotero papers API
-│   │       ├── arxiv.py       # ArXiv integration API
-│   │       └── chat.py        # AI chat API
-│   ├── core/            # Configuration
-│   │   ├── __init__.py
-│   │   └── config.py    # Pydantic settings
-│   ├── data/            # Sample data and utilities
-│   │   ├── __init__.py
-│   │   ├── sample/
-│   │   └── sample_data.py
-│   ├── models/          # Pydantic models
-│   │   ├── __init__.py
-│   │   ├── paper.py     # Paper data models
-│   │   └── arxiv.py     # ArXiv data models
-│   ├── services/        # Business logic
-│   │   ├── __init__.py
-│   │   ├── pdf_parser.py      # PDF to Markdown service
-│   │   ├── zotero_service.py  # Zotero API service
-│   │   └── arxiv_service.py   # ArXiv paper fetching service
-│   └── tests/           # Backend tests
-│       ├── __init__.py
-│       └── test_main.py
-├── frontend/            # Vue.js + TypeScript + Tailwind CSS frontend
-│   ├── package.json     # Frontend dependencies
-│   ├── pnpm-lock.yaml   # Package lock
-│   ├── vite.config.ts   # Vite configuration
-│   ├── tailwind.config.js # Tailwind CSS configuration
-│   ├── postcss.config.js # PostCSS configuration
-│   ├── tsconfig.json    # TypeScript config
-│   ├── index.html       # HTML entry point
-│   └── src/
-│       ├── main.ts           # Vue app entry
-│       ├── App.vue           # Root component
-│       ├── env.d.ts          # TypeScript declarations
-│       ├── router/           # Vue Router
-│       │   └── index.ts
-│       ├── views/            # Page components
-│       │   ├── PaperList.vue
-│       │   └── PaperReader.vue
-│       ├── assets/           # Static assets
-│       │   └── main.css      # Tailwind CSS imports
-│       ├── components/       # Reusable components
-│       │   ├── AIChat.vue
-│       │   └── AIConfig.vue
-│       ├── services/         # Service integrations
-│       │   └── aiService.ts
-│       ├── stores/           # Pinia stores
-│       │   └── aiStore.ts
-│       ├── types/            # TypeScript type definitions
-│       └── utils/            # Utility functions
-├── data/                  # Cache and data storage
-│   └── cache/             # Application cache
-├── docs/                  # Design documents
-│   ├── 0001-design.md     # Project requirements
-│   ├── 0002-frontend-ai-design.md # Frontend AI integration design
-│   ├── 0003-zotero-connector-api.md # Zotero Connector API docs
-│   └── 0004-save-arxiv-to-zotero-design.md # ArXiv integration design
-├── .env.example          # Environment template
-├── .gitignore            # Git ignore rules
-├── pyproject.toml        # Python project configuration
-├── uv.lock               # UV dependency lock
-├── README.md             # Project documentation
-├── lefthook.yml          # Git hooks configuration
-└── CLAUDE.md             # Claude Code guidance
-```
+### Caching Strategy
+- **PDF content caching**: MD5-based file content caching in `data/cache/markitdown/`
+- **ArXiv metadata caching**: Paper metadata cached in `data/cache/arxiv/metadata/`
+- **PDF files caching**: Downloaded PDFs cached in `data/cache/arxiv/pdf/`
 
-## Core Features
+### Frontend State Management
+- **Pinia stores**: Centralized state management with `aiStore.ts` for AI configuration
+- **Service layer**: API calls abstracted in `services/` directory
+- **Component composition**: Reusable components with clear separation of concerns
 
-1. **List Page**: Display papers from Zotero, show processing status with tag filtering
-2. **Reader Page**: PDF viewer on left, AI chat on right with resizable panels
-3. **AI Integration**: Paper analysis and Q&A based on content with local storage persistence
-4. **Zotero Sync**: Async local API integration for paper metadata
-5. **Search & Filter**: Real-time search and tag-based filtering
-6. **Async Processing**: Non-blocking I/O for all external operations
-7. **AI Configuration**: Frontend component for managing AI API settings
-8. **Caching**: PDF processing results cached in `data/cache/markitdown/`
+## Key Files & Directories
 
-## Quick Start Commands
+### Backend Services
+- `app/services/zotero_service.py`: Async Zotero API client (user_id=0 for local API)
+- `app/services/pdf_parser.py`: Async PDF to markdown conversion with caching
+- `app/services/database.py`: SQLite chat history persistence
+- `app/services/arxiv_service.py`: ArXiv paper fetching with caching
 
-```bash
-# Backend
-uv run uvicorn app.main:app --reload
+### API Endpoints
+- `/api/v1/papers` - Zotero paper management
+- `/api/v1/arxiv` - ArXiv integration endpoints
+- `/api/v1/chat` - AI chat and paper analysis
 
-# Frontend
-cd frontend && pnpm dev
+### Frontend Components
+- `frontend/src/components/AIChat.vue`: Main chat interface with markdown/KaTeX support
+- `frontend/src/components/AIConfig.vue`: AI service configuration modal
+- `frontend/src/components/ArxivInput.vue`: ArXiv paper ID input component
+- `frontend/src/components/ArxivHoverPopup.vue`: Hover popup for ArXiv paper previews
+- `frontend/src/views/PaperList.vue`: Paper listing with search and filtering
+- `frontend/src/views/PaperReader.vue`: Split-pane PDF reader + AI chat
 
-# Tests
-uv run pytest -v
+## Data Flow
 
-# Code formatting
-uv run black .
-uv run ruff check . --fix
+1. **Zotero Integration**: Direct local API access via `http://localhost:23119`
+2. **PDF Processing**: PDF → MD5 hash → cache check → markitdown conversion → cache storage
+3. **AI Analysis**: Paper content → OpenAI API → structured response → chat history
+4. **Chat Persistence**: Real-time saving to SQLite with JSON serialization
 
-# Frontend linting
-cd frontend && pnpm lint
-cd frontend && pnpm type-check
-cd frontend && pnpm format
-```
+## Development Workflow
 
-## Notice
+1. **Start backend**: `uv run uvicorn app.main:app --reload`
+2. **Start frontend**: `cd frontend && pnpm dev`
+3. **Test Zotero connection**: Backend auto-detects local Zotero at startup
+4. **Configure AI**: Set OpenAI-compatible API key in frontend settings
 
-### Git Hooks
+## Git Hooks (Lefthook)
 
-1. After staging files with `git add`, ALWAYS run `uv run lefthook run pre-commit` to ensure code quality before committing.
-2. ALWAYS run `git add` before lefthook
-3. ALWAYS run lefthook before commit
-4. If git commit failed because of pre-commit checking, if auto-fixed, retry withou `--amend`
+Configured in `lefthook.yml`:
+- Python formatting with black
+- Python linting with ruff
+- TypeScript formatting/linting
+- Trailing whitespace cleanup
+- End-of-file fixes
 
-### Coding Style
-1. DO NOT write overly broad `try ... except` blocks that catch all exceptions.
-2. Prefer async/await over callbacks, use aiohttp for HTTP
+**Always run**:
+- `uv run lefthook run pre-commit` before committing
+- `git add` before `lefthook`
+
+## Coding Style Guidelines
+
+### Python
+- **Async/await over callbacks**: Always use async/await for I/O operations
+- **aiohttp for HTTP**: Use aiohttp for all external HTTP calls
+- **Specific exception handling**: Never use broad `try...except` blocks
+- **Type hints**: Use proper type annotations throughout
+- **Black formatting**: 88 character line length
+- **Ruff linting**: Follow configured linting rules
+
+### TypeScript/Vue
+- **Composition API**: Prefer Vue 3 Composition API
+- **Type safety**: Strict TypeScript checking enabled
+- **Tailwind CSS**: Use utility-first styling with Tailwind v4
+- **Component naming**: PascalCase for components, camelCase for functions
+- **File structure**: Mirror backend API structure in services
+
+### General Patterns
+- **Service layer abstraction**: All external calls go through dedicated services
+- **Error boundaries**: Proper error handling at service boundaries
+- **Async operations**: Never block the event loop with sync operations
+
+## Testing
+
+### Backend Tests
+- Located in `app/tests/`
+- Uses pytest-asyncio for async test support
+- Run with: `uv run -m pytest -v`
+
+### Frontend Type Checking
+- Vue TypeScript checking: `pnpm type-check`
+- ESLint + Prettier: `pnpm lint && pnpm format`
+
+## Production Deployment
+
+1. Build frontend: `cd frontend && pnpm build`
+2. Backend serves static files from `frontend/dist/`
+3. All API routes remain available under `/api/v1/`
+
+## Common Troubleshooting
+
+- **Zotero not detected**: Ensure Zotero is running and local API is enabled
+- **PDF parsing issues**: Check file permissions and PDF file validity
+- **CORS issues**: Verify frontend proxy config in `vite.config.ts`

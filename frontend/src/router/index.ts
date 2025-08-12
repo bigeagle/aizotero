@@ -13,13 +13,13 @@ const router = createRouter({
       path: '/read/zotero/:id',
       name: 'paper-reader-zotero',
       component: () => import('@/views/PaperReader.vue'),
-      props: { source: 'zotero' },
+      props: (route) => ({ source: 'zotero', paperId: route.params.id }),
     },
     {
       path: '/read/arxiv/:id',
       name: 'paper-reader-arxiv',
       component: () => import('@/views/PaperReader.vue'),
-      props: { source: 'arxiv' },
+      props: (route) => ({ source: 'arxiv', paperId: route.params.id }),
     },
   ],
 });

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import AIChat from '@/components/AIChat.vue';
 import AIConfig from '@/components/AIConfig.vue';
 import { zoteroService, type ZoteroPaper } from '@/services/zoteroService';
@@ -8,10 +8,10 @@ import { arxivService, type ArxivPaper } from '@/services/arxivService';
 
 interface Props {
   source: 'zotero' | 'arxiv';
+  paperId: string;
 }
 
 const props = defineProps<Props>();
-const route = useRoute();
 const router = useRouter();
 
 // 统一 Paper 接口
@@ -26,8 +26,6 @@ interface Paper {
   url?: string;
 }
 
-const paperId = route.params.id as string;
-
 const paper = ref<Paper | null>(null);
 const chatWidth = ref(600);
 const isResizing = ref(false);
@@ -40,24 +38,22 @@ const isArxiv = computed(() => props.source === 'arxiv');
 const pdfUrl = computed(() => {
   if (!paper.value?.pdf_path) return null;
 
-  const id = route.params.id as string;
   if (props.source === 'arxiv') {
-    return arxivService.getPdfURL(id);
+    return arxivService.getPdfURL(props.paperId);
   } else {
-    return zoteroService.getPdfURL(id);
+    return zoteroService.getPdfURL(props.paperId);
   }
 });
 
 async function fetchPaper() {
   loading.value = true;
   try {
-    const id = route.params.id as string;
     let paperData: ZoteroPaper | ArxivPaper;
 
     if (props.source === 'arxiv') {
-      paperData = await arxivService.getPaper(id);
+      paperData = await arxivService.getPaper(props.paperId);
     } else {
-      paperData = await zoteroService.getPaper(id);
+      paperData = await zoteroService.getPaper(props.paperId);
     }
 
     paper.value = {
@@ -73,7 +69,7 @@ async function fetchPaper() {
   } catch (error) {
     console.error('Failed to fetch paper:', error);
     paper.value = {
-      id: paperId,
+      id: props.paperId,
       title: '论文加载中...',
       authors: '未知作者',
     };
@@ -115,7 +111,7 @@ async function handleSaveToZotero() {
   saveError.value = '';
 
   try {
-    const response = await zoteroService.saveToZotero(paperId, true);
+    const response = await zoteroService.saveToZotero(props.paperId, true);
     saveStatus.value = 'success';
 
     // 路由到Zotero文章阅读页面
@@ -251,7 +247,7 @@ onUnmounted(() => {
 
         <!-- AI对话 -->
         <div class="flex-1 overflow-hidden">
-          <AIChat :paper-id="paperId" :source="props.source" @show-config="showAIConfig = true" />
+          <AIChat :paper-id="props.paperId" :source="props.source" @show-config="showAIConfig = true" />
         </div>
       </div>
     </div>

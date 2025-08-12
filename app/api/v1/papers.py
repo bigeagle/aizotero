@@ -1,3 +1,5 @@
+import os
+import urllib.parse
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -124,12 +126,11 @@ async def get_paper_pdf(paper_id: str):
 
     # 从file:// URL提取本地文件路径
     if pdf_url.startswith("file://"):
-        pdf_file_path = pdf_url.replace("file://", "")
+        pdf_file_path = urllib.parse.unquote(pdf_url.replace("file://", ""))
     else:
         pdf_file_path = pdf_url
 
     # 检查文件是否存在
-    import os
 
     if not os.path.exists(pdf_file_path):
         raise HTTPException(status_code=404, detail="PDF file not found")
@@ -159,7 +160,7 @@ async def get_paper_markdown(paper_id: str):
     # 从本地文件路径读取PDF
     # 提取本地文件路径从file:// URL
     if pdf_url.startswith("file://"):
-        pdf_file = pdf_url.replace("file://", "")
+        pdf_file = urllib.parse.unquote(pdf_url.replace("file://", ""))
     else:
         pdf_file = pdf_url
 

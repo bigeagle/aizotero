@@ -24,7 +24,7 @@
       >
         <div
           :class="message.role === 'user' ? 'bg-blue-500 text-white inline-block' : 'bg-white inline-block'"
-          class="px-4 py-2 rounded-lg max-w-xs sm:max-w-md lg:max-w-lg"
+          class="px-4 py-2 rounded-lg"
         >
           <div
             v-if="message.role === 'assistant'"

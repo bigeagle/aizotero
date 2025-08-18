@@ -17,6 +17,11 @@
   - 目标实现：支持任意 PDF URL，用 LLM 提取元数据并添加到 Zotero
   - 原因：扩展支持范围，提升灵活性
 
+- [ ] **Better PDF Viewer**: 更紧密集成的 pdf 阅读器
+  - 当前实现：直接 iframe，交给浏览器
+  - 目标实现：改用 https://github.com/embedpdf/embed-pdf-viewer
+  - 原因：提供双面浏览等功能、给用户更无缝的体验
+
 
 ## 技术债务
 - [ ] 完善错误处理机制

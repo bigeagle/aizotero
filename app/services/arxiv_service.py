@@ -118,6 +118,17 @@ class ArxivService:
             if "term" in category.attrib:
                 categories.append(category.attrib["term"])
 
+        # 提取PDF URL
+        pdf_url = f"{self.base_url}/pdf/{arxiv_id}"  # default value
+        for link in entry.findall("atom:link", ns):
+            if (
+                link.get("title") == "pdf"
+                and link.get("type") == "application/pdf"
+                and link.get("href")
+            ):
+                pdf_url = link.get("href", "")
+                break
+
         return ArxivMetadata(
             arxiv_id=arxiv_id,
             title=(
@@ -137,11 +148,17 @@ class ArxivService:
                 else ""
             ),
             categories=categories,
+            pdf_url=pdf_url,
         )
 
     async def _get_pdf(self, arxiv_id: str) -> Path:
         """获取PDF文件，带缓存"""
-        cache_file = self.pdf_cache_dir / f"{arxiv_id}.pdf"
+        meta = await self.get_arxiv_metadata(arxiv_id)
+        pdf_url = meta.pdf_url if meta else f"{self.base_url}/pdf/{arxiv_id}"
+
+        # extract basename from pdf_url
+        pdf_filename = pdf_url.split("/")[-1]
+        cache_file = self.pdf_cache_dir / pdf_filename
 
         # 检查缓存
         if cache_file.exists():
@@ -151,9 +168,6 @@ class ArxivService:
             else:
                 # 缓存文件损坏，重新下载
                 cache_file.unlink(missing_ok=True)
-
-        # 下载PDF
-        pdf_url = f"{self.base_url}/pdf/{arxiv_id}.pdf"
 
         try:
             async with aiohttp.ClientSession() as session:

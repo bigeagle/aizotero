@@ -10,6 +10,7 @@ class ArxivMetadata(BaseModel):
     abstract: str = ""
     published: str = ""
     categories: list[str] = Field(default_factory=list)
+    pdf_url: str
 
     model_config = {"from_attributes": True}
 

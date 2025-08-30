@@ -66,6 +66,11 @@ async function fetchPaper() {
       pdf_path: paperData.pdf_path,
       url: paperData.url,
     };
+
+    // 更新网页标题为论文标题
+    if (paperData.title) {
+      document.title = `${paperData.title} - AI论文助手`;
+    }
   } catch (error) {
     console.error('Failed to fetch paper:', error);
     paper.value = {
@@ -73,6 +78,7 @@ async function fetchPaper() {
       title: '论文加载中...',
       authors: '未知作者',
     };
+    document.title = '论文加载失败 - AI论文助手';
   } finally {
     loading.value = false;
   }

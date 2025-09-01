@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import AIChat from '@/components/AIChat.vue';
 import AIConfig from '@/components/AIConfig.vue';
@@ -109,6 +109,14 @@ function stopResize() {
 onMounted(() => {
   fetchPaper();
 });
+
+// 监听props变化，重新获取论文数据
+watch(
+  () => [props.source, props.paperId],
+  () => {
+    fetchPaper();
+  }
+);
 
 async function handleSaveToZotero() {
   if (!isArxiv.value || !paper.value) return;

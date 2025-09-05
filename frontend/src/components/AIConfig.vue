@@ -160,7 +160,6 @@ async function _fetchModels() {
       headers: {
         Authorization: `Bearer ${config.value.apiKey}`,
       },
-      signal: AbortSignal.timeout(1000),
     });
 
     if (response.ok) {
@@ -239,8 +238,7 @@ watch(
     } else {
       models.value = [];
     }
-  },
-  { immediate: true }
+  }
 );
 
 watch(models, (newModels) => {

@@ -179,6 +179,6 @@ export const aiService = new AIService({
   apiKey: localStorage.getItem('llm_api_key') || '',
   baseUrl: localStorage.getItem('llm_base_url') || 'https://api.openai.com/v1',
   model: localStorage.getItem('llm_model') || 'gpt-3.5-turbo',
-  maxTokens: 2000,
-  temperature: 0.7,
+  maxTokens: Number(localStorage.getItem('llm_max_tokens')) || 2000,
+  temperature: Number(localStorage.getItem('llm_temperature')) || 0.7,
 });

@@ -108,7 +108,7 @@
         </div>
       </div>
 
-      <!-- 测试按钮 -->
+      <!-- 操作按钮 -->
       <div class="mt-4 flex space-x-2">
         <button
           @click="testConnection"
@@ -116,6 +116,13 @@
           class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600"
         >
           {{ testing ? '测试中...' : '测试连接' }}
+        </button>
+        <button
+          @click="saveConfig"
+          :disabled="saving"
+          class="flex-1 px-4 py-2 bg-green-500 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-600"
+        >
+          {{ saving ? '保存中...' : '保存配置' }}
         </button>
         <button @click="clearConfig" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
           清除配置
@@ -133,6 +140,7 @@ import { debounce } from '@/utils/debounce';
 const aiStore = useAIStore();
 const showApiKey = ref(false);
 const testing = ref(false);
+const saving = ref(false);
 const models = ref<Array<{ id: string; object: string; owned_by: string }>>([]);
 
 const config = computed(() => aiStore.config);
@@ -213,6 +221,24 @@ async function testConnection() {
     models.value = [];
   } finally {
     testing.value = false;
+  }
+}
+
+function saveConfig() {
+  saving.value = true;
+  try {
+    aiStore.updateConfig({
+      apiKey: config.value.apiKey,
+      baseUrl: config.value.baseUrl,
+      model: config.value.model,
+      maxTokens: config.value.maxTokens,
+      temperature: config.value.temperature,
+    });
+    alert('✅ 配置保存成功！');
+  } catch {
+    alert('❌ 保存失败，请重试');
+  } finally {
+    saving.value = false;
   }
 }
 

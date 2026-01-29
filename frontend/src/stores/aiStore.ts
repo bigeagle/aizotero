@@ -7,8 +7,8 @@ export const useAIStore = defineStore('ai', () => {
     apiKey: localStorage.getItem('llm_api_key') || '',
     baseUrl: localStorage.getItem('llm_base_url') || 'https://api.openai.com/v1',
     model: localStorage.getItem('llm_model') || 'gpt-3.5-turbo',
-    maxTokens: 2000,
-    temperature: 0.7,
+    maxTokens: Number(localStorage.getItem('llm_max_tokens')) || 2000,
+    temperature: Number(localStorage.getItem('llm_temperature')) || 0.7,
   });
 
   const currentPaper = ref<PaperContext | null>(null);
@@ -31,6 +31,8 @@ export const useAIStore = defineStore('ai', () => {
     localStorage.setItem('llm_api_key', config.value.apiKey);
     localStorage.setItem('llm_base_url', config.value.baseUrl);
     localStorage.setItem('llm_model', config.value.model);
+    localStorage.setItem('llm_max_tokens', String(config.value.maxTokens));
+    localStorage.setItem('llm_temperature', String(config.value.temperature));
   }
 
   function setCurrentPaper(paper: PaperContext) {

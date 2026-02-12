@@ -35,5 +35,13 @@ class Settings(BaseSettings):
         default=Path("frontend/dist"), description="Directory for static frontend files"
     )
 
+    # Proxy settings for external HTTP requests
+    HTTP_PROXY: str = Field(
+        default="", description="HTTP proxy URL (e.g., http://127.0.0.1:7890)"
+    )
+    HTTPS_PROXY: str = Field(
+        default="", description="HTTPS proxy URL (e.g., http://127.0.0.1:7890)"
+    )
+
 
 settings = Settings()

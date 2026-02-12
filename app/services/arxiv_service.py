@@ -27,6 +27,26 @@ class ArxivService:
 
         self.pdf_parser = pdf_parser
 
+    def _get_proxy(self) -> str | None:
+        """获取代理配置，优先使用 HTTPS_PROXY"""
+        proxy = settings.HTTPS_PROXY or settings.HTTP_PROXY
+        return proxy if proxy else None
+
+    def _get_session(self) -> aiohttp.ClientSession:
+        """获取配置好代理的 aiohttp 会话"""
+        connector = None
+        proxy = self._get_proxy()
+
+        if proxy:
+            connector = aiohttp.TCPConnector(ssl=False)
+            logger.debug(f"Using proxy: {proxy}")
+
+        return aiohttp.ClientSession(
+            connector=connector,
+            timeout=aiohttp.ClientTimeout(total=60),
+            trust_env=True,  # 允许从环境变量读取代理
+        )
+
     async def get_arxiv_paper(self, arxiv_id: str) -> ArxivPaper:
         """获取arXiv论文完整数据"""
         metadata = await self.get_arxiv_metadata(arxiv_id)
@@ -92,8 +112,9 @@ class ArxivService:
         """从arXiv API获取元数据"""
         url = f"https://export.arxiv.org/api/query?id_list={arxiv_id}"
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
+        proxy = self._get_proxy()
+        async with self._get_session() as session:
+            async with session.get(url, proxy=proxy) as response:
                 response.raise_for_status()
                 content = await response.text()
 
@@ -170,8 +191,9 @@ class ArxivService:
                 cache_file.unlink(missing_ok=True)
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(pdf_url) as response:
+            proxy = self._get_proxy()
+            async with self._get_session() as session:
+                async with session.get(pdf_url, proxy=proxy) as response:
                     if response.status != 200:
                         raise ValueError(f"无法下载PDF: HTTP {response.status}")
 

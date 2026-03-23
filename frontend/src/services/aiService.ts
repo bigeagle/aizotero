@@ -40,7 +40,7 @@ export class AIService {
     this.conversationHistory = [
       {
         role: 'system',
-        content: `你是学术论文阅读助手。默认用 markdown 格式回答问题，但不要使用表格，数学公式使用 $LaTeX$ 格式。`,
+        content: `你是学术论文阅读助手。默认用 markdown 格式回答问题，但不要使用表格，数学公式使用 LaTeX 格式。\n行内公式放在 \\( 行内公式 \\)，行间公式一定要独立成行，放在 \n\\[ 行间公式 \\]\n 中。`,
         timestamp: new Date(),
       },
     ];

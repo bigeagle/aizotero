@@ -141,6 +141,16 @@ const aiService = new AIService(aiStore.config);
 const currentQuestion = ref('');
 const isComposing = ref(false);
 const chatContainer = ref<HTMLElement | null>(null);
+const markdownCache = new Map<string, string>();
+let scrollFrameId: number | null = null;
+
+const markedWithKatex = marked.use(
+  markedKatex({
+    throwOnError: false,
+    displayMode: false,
+    nonStandard: true,
+  })
+);
 
 const conversation = computed(() => aiStore.conversation);
 const isLoading = computed(() => aiStore.isLoading);
@@ -222,8 +232,6 @@ async function sendQuestion() {
         // 更新现有的 assistant 消息
         if (assistantMessageIndex >= 0 && assistantMessageIndex < aiStore.conversation.length) {
           aiStore.conversation[assistantMessageIndex].content = responseContent;
-          // 触发响应式更新
-          aiStore.conversation.splice(assistantMessageIndex, 1, aiStore.conversation[assistantMessageIndex]);
         }
       },
       () => {
@@ -302,24 +310,38 @@ function formatTime(timestamp: Date) {
 function renderMarkdown(content: string): string {
   if (!content.trim()) return '';
 
-  // 使用自定义的 marked-katex-custom 并启用 relaxed 模式
-  const markedWithKatex = marked.use(
-    markedKatex({
-      throwOnError: false,
-      displayMode: false,
-      nonStandard: true, // 启用 relaxed 模式
-    })
-  );
+  const cachedHtml = markdownCache.get(content);
+  if (cachedHtml) {
+    return cachedHtml;
+  }
 
-  return markedWithKatex.parse(content) as string;
+  const renderedHtml = markedWithKatex.parse(content) as string;
+
+  if (markdownCache.size > 200) {
+    const oldestKey = markdownCache.keys().next().value;
+    if (oldestKey) {
+      markdownCache.delete(oldestKey);
+    }
+  }
+
+  markdownCache.set(content, renderedHtml);
+  return renderedHtml;
 }
 
 // 自动滚动到底部
 function scrollToBottom() {
-  nextTick(() => {
-    if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-    }
+  if (scrollFrameId !== null) {
+    return;
+  }
+
+  scrollFrameId = requestAnimationFrame(() => {
+    scrollFrameId = null;
+
+    nextTick(() => {
+      if (chatContainer.value) {
+        chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+      }
+    });
   });
 }
 

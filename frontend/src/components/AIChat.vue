@@ -49,77 +49,22 @@
       </div>
     </div>
 
-    <!-- 快速提示 -->
-    <div class="px-3 pt-3 pb-1 bg-white border-t border-gray-200 shrink-0">
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="prompt in quickPrompts"
-          :key="prompt.key"
-          @click="useQuickPrompt(prompt)"
-          :disabled="isLoading"
-          class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {{ prompt.label }}
-        </button>
-      </div>
-    </div>
-
-    <!-- 输入区域 -->
-    <div class="p-3 bg-white shrink-0">
-      <div class="flex space-x-2">
-        <textarea
-          v-model="currentQuestion"
-          @keydown="handleKeydown"
-          @compositionstart="isComposing = true"
-          @compositionend="isComposing = false"
-          placeholder="关于这篇论文的问题..."
-          class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-          rows="1"
-          :disabled="isLoading || !isConfigured"
-        />
-        <button
-          @click="sendQuestion"
-          :disabled="isLoading || !currentQuestion.trim() || !isConfigured"
-          class="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-            />
-          </svg>
-        </button>
-      </div>
-
-      <div class="flex justify-between items-center mt-2 text-sm text-gray-500">
-        <div>
-          <span v-if="tokenUsage > 0">已用 token: {{ tokenUsage }}</span>
-        </div>
-        <div class="flex space-x-2">
-          <button
-            @click="clearConversation"
-            class="text-blue-600 hover:text-blue-800"
-            :disabled="conversation.length === 0"
-          >
-            清空对话
-          </button>
-          <button
-            @click="exportConversation"
-            class="text-blue-600 hover:text-blue-800"
-            :disabled="conversation.length === 0"
-          >
-            导出
-          </button>
-        </div>
-      </div>
-    </div>
+    <AIChatInput
+      :is-loading="isLoading"
+      :is-configured="isConfigured"
+      :token-usage="tokenUsage"
+      :has-conversation="conversation.length > 0"
+      :quick-prompts="quickPrompts"
+      @submit="sendQuestion"
+      @clear="clearConversation"
+      @export="exportConversation"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, nextTick, watch, onMounted } from 'vue';
+import AIChatInput from '@/components/AIChatInput.vue';
 import { useAIStore } from '@/stores/aiStore';
 import { AIService } from '@/services/aiService';
 import { zoteroService } from '@/services/zoteroService';
@@ -138,8 +83,6 @@ const props = defineProps<Props>();
 const aiStore = useAIStore();
 const aiService = new AIService(aiStore.config);
 
-const currentQuestion = ref('');
-const isComposing = ref(false);
 const chatContainer = ref<HTMLElement | null>(null);
 const markdownCache = new Map<string, string>();
 let scrollFrameId: number | null = null;
@@ -205,11 +148,10 @@ async function initializeAI() {
 }
 
 // 发送问题
-async function sendQuestion() {
-  if (!currentQuestion.value.trim() || !isConfigured.value) return;
+async function sendQuestion(question: string) {
+  if (!question.trim() || !isConfigured.value) return;
 
-  const question = currentQuestion.value.trim();
-  currentQuestion.value = '';
+  const normalizedQuestion = question.trim();
 
   try {
     aiStore.setLoading(true);
@@ -217,7 +159,7 @@ async function sendQuestion() {
 
     aiStore.addMessage({
       role: 'user',
-      content: question,
+      content: normalizedQuestion,
       timestamp: new Date(),
     });
 
@@ -252,24 +194,6 @@ async function sendQuestion() {
     aiStore.setError(err instanceof Error ? err.message : '发送消息失败');
   } finally {
     aiStore.setLoading(false);
-  }
-}
-
-// 使用快速提示
-function useQuickPrompt(prompt: { key: string; label: string; prompt: string }) {
-  currentQuestion.value = prompt.prompt;
-  sendQuestion();
-}
-
-// 处理键盘事件
-function handleKeydown(event: KeyboardEvent) {
-  if (isComposing.value || event.isComposing || event.keyCode === 229) {
-    return;
-  }
-
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendQuestion();
   }
 }
 
@@ -436,11 +360,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-
 .animate-spin {
   animation: spin 1s linear infinite;
 }

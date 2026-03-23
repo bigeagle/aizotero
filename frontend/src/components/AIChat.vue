@@ -70,6 +70,8 @@
         <textarea
           v-model="currentQuestion"
           @keydown="handleKeydown"
+          @compositionstart="isComposing = true"
+          @compositionend="isComposing = false"
           placeholder="关于这篇论文的问题..."
           class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           rows="1"
@@ -137,6 +139,7 @@ const aiStore = useAIStore();
 const aiService = new AIService(aiStore.config);
 
 const currentQuestion = ref('');
+const isComposing = ref(false);
 const chatContainer = ref<HTMLElement | null>(null);
 
 const conversation = computed(() => aiStore.conversation);
@@ -252,6 +255,10 @@ function useQuickPrompt(prompt: { key: string; label: string; prompt: string }) 
 
 // 处理键盘事件
 function handleKeydown(event: KeyboardEvent) {
+  if (isComposing.value || event.isComposing || event.keyCode === 229) {
+    return;
+  }
+
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     sendQuestion();

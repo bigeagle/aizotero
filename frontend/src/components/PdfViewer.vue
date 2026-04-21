@@ -14,7 +14,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   spreadMode: 'none',
   disabledCategories: () => [
-    'annotation',
     'redaction',
     'print',
     'export',

@@ -95,7 +95,6 @@ describe('PdfViewer', () => {
     });
     const embed = wrapper.findComponent({ name: 'PDFViewer' });
     const categories = embed.props('config').disabledCategories;
-    expect(categories).toContain('annotation');
     expect(categories).toContain('redaction');
     expect(categories).toContain('print');
     expect(categories).toContain('insert');

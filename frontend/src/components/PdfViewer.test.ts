@@ -164,11 +164,35 @@ describe('PdfViewer', () => {
   it('applies spread mode via registry capability when spreadMode prop changes after ready', async () => {
     const setSpreadMode = vi.fn();
     const mockRegistry = {
-      getPlugin: vi.fn(() => ({
-        provides: () => ({
-          setSpreadMode,
+      getPlugin: vi.fn((id: string) => {
+        if (id === 'spread') {
+          return {
+            provides: () => ({
+              setSpreadMode,
+            }),
+          };
+        }
+        if (id === 'scroll') {
+          return {
+            provides: () => ({
+              onPageChange: () => () => {},
+              getMetrics: () => ({ currentPage: 1 }),
+              scrollToPage: () => {},
+              forDocument: () => ({
+                onPageChange: () => () => {},
+                getMetrics: () => ({ currentPage: 1 }),
+                scrollToPage: () => {},
+              }),
+            }),
+          };
+        }
+        return null;
+      }),
+      getStore: () => ({
+        getState: () => ({
+          core: { documents: { 'doc-1': {} } },
         }),
-      })),
+      }),
     };
 
     const wrapper = mount(PdfViewer, {
@@ -183,7 +207,7 @@ describe('PdfViewer', () => {
     embed.vm.$emit('ready', mockRegistry);
     await nextTick();
 
-    expect(mockRegistry.getPlugin).not.toHaveBeenCalled();
+    expect(mockRegistry.getPlugin).toHaveBeenCalledWith('scroll');
 
     // Change spread mode
     await wrapper.setProps({ spreadMode: 'odd' });

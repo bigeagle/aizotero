@@ -36,7 +36,19 @@ const loading = ref(true);
 const saveStatus = ref<'idle' | 'saving' | 'success' | 'error'>('idle');
 const saveError = ref('');
 const isArxiv = computed(() => props.source === 'arxiv');
-const spreadMode = ref<SpreadModeLiteral>('odd');
+function getStoredSpreadMode(): SpreadModeLiteral {
+  try {
+    const stored = localStorage.getItem('pdf-spread-mode');
+    if (stored === 'none' || stored === 'odd' || stored === 'even') {
+      return stored;
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return 'odd';
+}
+
+const spreadMode = ref<SpreadModeLiteral>(getStoredSpreadMode());
 
 const pdfUrl = computed(() => {
   if (!paper.value?.pdf_path) return null;

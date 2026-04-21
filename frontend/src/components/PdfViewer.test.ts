@@ -137,6 +137,16 @@ describe('PdfViewer', () => {
     expect(embed.props('config').tabBar).toBe('never');
   });
 
+  it('enables annotation rendering for clickable links', () => {
+    const wrapper = mount(PdfViewer, {
+      props: {
+        src: 'https://example.com/test.pdf',
+      },
+    });
+    const embed = wrapper.findComponent({ name: 'PDFViewer' });
+    expect(embed.props('config').render).toEqual({ withAnnotations: true });
+  });
+
   it('updates config when spreadMode prop changes', async () => {
     const wrapper = mount(PdfViewer, {
       props: {

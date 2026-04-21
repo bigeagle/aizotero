@@ -48,6 +48,9 @@ const config = computed<PDFViewerConfig>(() => {
     spread: {
       defaultSpreadMode: props.spreadMode as unknown as 'none' | 'odd' | 'even',
     },
+    render: {
+      withAnnotations: true,
+    },
   } as PDFViewerConfig;
 });
 

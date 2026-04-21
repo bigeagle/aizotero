@@ -75,5 +75,6 @@ venvPath = "."
 dev = [
     "black>=25.1.0",
     "lefthook>=1.11.3",
+    "prek>=0.3.9",
     "ruff>=0.12.7",
 ]

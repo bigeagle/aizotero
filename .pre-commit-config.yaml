@@ -1,0 +1,45 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.(lock|svg|png|jpg)$'
+      - id: end-of-file-fixer
+        exclude: '\.(lock|svg|png|jpg)$'
+
+  - repo: local
+    hooks:
+      - id: python-format
+        name: Python Format
+        entry: uv run black
+        language: system
+        types: [python]
+        pass_filenames: true
+
+      - id: python-lint
+        name: Python Lint
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
+        pass_filenames: true
+
+      - id: typescript-format
+        name: TypeScript Format
+        entry: bash -c 'cd frontend && pnpm format'
+        language: system
+        files: '\.(ts|vue|json)$'
+        pass_filenames: false
+
+      - id: typescript-lint
+        name: TypeScript Lint
+        entry: bash -c 'cd frontend && pnpm lint'
+        language: system
+        files: '\.(ts|vue)$'
+        pass_filenames: false
+
+      - id: typescript-type-check
+        name: TypeScript Type Check
+        entry: bash -c 'cd frontend && pnpm type-check'
+        language: system
+        files: '\.(ts|vue)$'
+        pass_filenames: false

@@ -121,18 +121,37 @@ pnpm build
 3. **Test Zotero connection**: Backend auto-detects local Zotero at startup
 4. **Configure AI**: Set OpenAI-compatible API key in frontend settings
 
-## Git Hooks (Lefthook)
+## Git Hooks (prek)
 
-Configured in `lefthook.yml`:
+使用 **prek** 管理 Git hooks。prek 作为项目 dev 依赖安装，通过 `uv run` 调用，无需单独安装系统级工具。
+
+```bash
+# 安装 hooks（clone 后或 .pre-commit-config.yaml 变更后执行一次）
+uv run prek install
+
+# 手动跑所有 hooks（对全部文件）
+uv run prek run --all-files
+
+# 只跑单个 hook
+uv run prek run python-lint
+```
+
+配置覆盖：
+- `trailing-whitespace` / `end-of-file-fixer`（来自 pre-commit-hooks）
 - Python formatting with black
 - Python linting with ruff
-- TypeScript formatting/linting
-- Trailing whitespace cleanup
-- End-of-file fixes
+- TypeScript formatting / linting / type-check
 
-**Always run**:
-- `uv run lefthook run pre-commit` before committing
-- `git add` before `lefthook`
+**重要：prek 不会自动 `git add`**
+
+和 lefthook 不同，prek（兼容 pre-commit）的自动修复类 hook（如 end-of-file-fixer、black、prettier）在修改文件后会返回非零 exit code 阻止 commit，让用户有机会审查修改。处理方式：
+
+```bash
+git add -A          # stage 修复后的文件
+git commit -m ...   # 重新提交，hooks 会再次运行并 pass
+```
+
+如果中间状态需要跳过 hooks：`git commit --no-verify`
 
 ## Coding Style Guidelines
 

@@ -3,6 +3,8 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import AIChat from '@/components/AIChat.vue';
 import AIConfig from '@/components/AIConfig.vue';
+import PdfViewer from '@/components/PdfViewer.vue';
+import type { SpreadModeLiteral } from '@/components/PdfViewer.vue';
 import { zoteroService, type ZoteroPaper } from '@/services/zoteroService';
 import { arxivService, type ArxivPaper } from '@/services/arxivService';
 
@@ -34,6 +36,7 @@ const loading = ref(true);
 const saveStatus = ref<'idle' | 'saving' | 'success' | 'error'>('idle');
 const saveError = ref('');
 const isArxiv = computed(() => props.source === 'arxiv');
+const spreadMode = ref<SpreadModeLiteral>('odd');
 
 const pdfUrl = computed(() => {
   if (!paper.value?.pdf_path) return null;
@@ -225,14 +228,13 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <iframe
+            <PdfViewer
               v-if="pdfUrl"
               :src="pdfUrl"
-              class="w-full h-full border-none"
+              v-model:spread-mode="spreadMode"
+              class="w-full h-full"
               :class="{ invisible: isResizing }"
-              type="application/pdf"
-            >
-            </iframe>
+            />
           </div>
         </div>
       </div>

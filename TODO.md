@@ -17,10 +17,12 @@
   - 目标实现：支持任意 PDF URL，用 LLM 提取元数据并添加到 Zotero
   - 原因：扩展支持范围，提升灵活性
 
-- [ ] **Better PDF Viewer**: 更紧密集成的 pdf 阅读器
+- [x] **Better PDF Viewer**: 更紧密集成的 pdf 阅读器
   - 当前实现：直接 iframe，交给浏览器
   - 目标实现：改用 https://github.com/embedpdf/embed-pdf-viewer
   - 原因：提供双面浏览等功能、给用户更无缝的体验
+  - 实现：新增 `PdfViewer.vue` 组件封装 `@embedpdf/vue-pdf-viewer`，支持单页/双页(odd)/双页(even)切换，保留 iframe fallback
+  - 测试：`PdfViewer.test.ts` (16 项)、`PaperReader.test.ts` (13 项)
 
 
 ## 技术债务

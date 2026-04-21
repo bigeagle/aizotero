@@ -163,6 +163,32 @@ Configured in `lefthook.yml`:
 - Uses pytest-asyncio for async test support
 - Run with: `uv run -m pytest -v`
 
+### Frontend Testing
+
+使用 **vitest**（Vite 原生测试框架，零配置）。
+
+```bash
+cd frontend
+pnpm test              # 跑一次
+pnpm test:watch        # watch 模式
+```
+
+测试文件放在 `src/**/*.test.ts`。已覆盖的测试：
+- `src/utils/marked-katex-custom.test.ts` — `extractDelimited` 状态机 + marked/KaTeX 集成渲染
+
+**写新测试时的注意事项**
+
+1. **始终在 `frontend/` 目录下跑**：依赖只在 `frontend/node_modules/`
+2. **不要写临时 `.mjs` 脚本了**：有 vitest 就直接写 `.test.ts`
+3. **字符串转义**：markdown 中的 `\theta` 在 JS 字符串里是 `'\\theta'`。如果不确定，用 `JSON.stringify(yourString)` 确认实际值
+4. **Node 不能直接 `import './foo.ts'`**：vitest 原生支持 `.ts`，不需要 tsx
+
+**浏览器端手动验证**
+
+- 测试页面路由：`/test/markdown`（仅开发模式显示入口）
+- 前台启动：`pnpm dev`，然后访问 `http://localhost:5173/test/markdown`
+- `pnpm dev` 带 hot-reload，需要用户自己在终端前台运行
+
 ### Frontend Type Checking
 - Vue TypeScript checking: `pnpm type-check`
 - ESLint + Prettier: `pnpm lint && pnpm format`

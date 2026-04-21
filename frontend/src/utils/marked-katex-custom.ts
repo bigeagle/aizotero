@@ -9,11 +9,37 @@ const inlineRuleNonStandard = /^(\${1,2})(?!\$)((?:\\.|[^\\\n])*?(?:\\.|[^\\\n\$
 const blockRule = /^(\${1,2})\n((?:\\[^]|[^\\])+?)\n\1(?:\n|$)/;
 const blockRuleNonStandard = /^(\${1,2})\n?((?:\\[^]|[^\\])+?)\n?\1(?:\n|$)/;
 
-const inlineRuleParenthes = /^(\\\()\s*((?:\\[^]|[^\\\]])+?)\s*(\\\))/;
-const blockRuleBracket = /^(\\\[)\s*((?:\\[^]|[^\\\]])+?)\s*(\\\])(?:\n|[\s?!\.,:？！。，：]|$)/;
-
 export interface MarkedKatexOptions extends KatexOptions {
   nonStandard?: boolean;
+}
+
+/**
+ * Extract content between startMarker and endMarker using a state machine.
+ * Handles the case where the end marker is escaped (e.g. \\]) — treats it as literal content.
+ */
+export function extractDelimited(
+  src: string,
+  startMarker: string,
+  endMarker: string
+): { content: string; raw: string } | null {
+  if (!src.startsWith(startMarker)) return null;
+  let i = startMarker.length;
+  let content = '';
+  while (i < src.length) {
+    if (src.substring(i, i + endMarker.length) === endMarker) {
+      // If content ends with a backslash, this is an escaped end marker (e.g. \\])
+      // and should be treated as literal content.
+      if (content.endsWith('\\')) {
+        content += src[i];
+        i++;
+        continue;
+      }
+      return { content, raw: src.substring(0, i + endMarker.length) };
+    }
+    content += src[i];
+    i++;
+  }
+  return null;
 }
 
 export default function markedKatex(options?: MarkedKatexOptions): MarkedExtension {
@@ -94,7 +120,7 @@ function inlineKatexParenthes(options: MarkedKatexOptions, renderer: any) {
         }
 
         const possibleKatex = indexSrc.substring(index - 1);
-        if (possibleKatex.match(inlineRuleParenthes)) {
+        if (extractDelimited(possibleKatex, '\\(', '\\)')) {
           return index - 1;
         }
 
@@ -102,12 +128,12 @@ function inlineKatexParenthes(options: MarkedKatexOptions, renderer: any) {
       }
     },
     tokenizer(src: string, tokens: any) {
-      const match = src.match(inlineRuleParenthes);
-      if (match) {
+      const extracted = extractDelimited(src, '\\(', '\\)');
+      if (extracted) {
         return {
           type: 'inlineKatex',
-          raw: match[0],
-          text: match[2].trim(),
+          raw: extracted.raw,
+          text: extracted.content.trim(),
           displayMode: false,
         };
       }
@@ -182,7 +208,7 @@ function blockKatexBracket(options: MarkedKatexOptions, renderer: any) {
         }
 
         const possibleKatex = indexSrc.substring(index - 1);
-        if (possibleKatex.match(blockRuleBracket)) {
+        if (extractDelimited(possibleKatex, '\\[', '\\]')) {
           return index - 1;
         }
 
@@ -190,13 +216,13 @@ function blockKatexBracket(options: MarkedKatexOptions, renderer: any) {
       }
     },
     tokenizer(src: string, tokens: any) {
-      const match = src.match(blockRuleBracket);
+      const extracted = extractDelimited(src, '\\[', '\\]');
 
-      if (match) {
+      if (extracted) {
         return {
           type: 'blockKatex',
-          raw: match[0],
-          text: match[2].trim(),
+          raw: extracted.raw,
+          text: extracted.content.trim(),
           displayMode: true,
         };
       }
@@ -225,7 +251,7 @@ function inlineKatexBracket(options: MarkedKatexOptions, renderer: any) {
         }
 
         const possibleKatex = indexSrc.substring(index - 1);
-        if (possibleKatex.match(blockRuleBracket)) {
+        if (extractDelimited(possibleKatex, '\\[', '\\]')) {
           return index - 1;
         }
 
@@ -233,13 +259,13 @@ function inlineKatexBracket(options: MarkedKatexOptions, renderer: any) {
       }
     },
     tokenizer(src: string, tokens: any) {
-      const match = src.match(blockRuleBracket);
+      const extracted = extractDelimited(src, '\\[', '\\]');
 
-      if (match) {
+      if (extracted) {
         return {
           type: 'blockKatex',
-          raw: match[0],
-          text: match[2].trim(),
+          raw: extracted.raw,
+          text: extracted.content.trim(),
           displayMode: true,
         };
       }

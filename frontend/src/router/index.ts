@@ -24,6 +24,12 @@ const router = createRouter({
       props: (route) => ({ source: 'arxiv', paperId: route.params.id }),
       meta: { title: '论文阅读 - AI论文助手' },
     },
+    {
+      path: '/test/markdown',
+      name: 'markdown-test',
+      component: () => import('@/views/MarkdownTest.vue'),
+      meta: { title: 'Markdown测试 - AI论文助手' },
+    },
   ],
 });
 
